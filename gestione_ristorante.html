@@ -8,6 +8,7 @@
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
 <body>
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 	<div class="container-fluid">
 		<a href="#" class="navbar-brand mb-0 h1">Fast Food - Area Ristoratore</a>
@@ -27,10 +28,11 @@
 		</div>
 	</div>
 </nav>
+
 <div class="container mt-5">
 	<h2 class="mb-4">Gestione Ristorante</h2>
 
-	<!-- Intestazione delle Schede -->
+	<!-- Intestazione schede -->
 	<ul class="nav nav-tabs" id="dashboardTabs">
 		<li class="nav-item">
 			<button class="nav-link active" id="profilo-tab" data-bs-toggle="tab" data-bs-target="#profilo-pane"
@@ -38,35 +40,192 @@
 			</button>
 		</li>
 		<li class="nav-item">
-			<button class="nav-link" id="menu-tab" data-bs-toggle="tab" data-bs-target="#menu-pane" type="button">Gestione Menù
+			<button class="nav-link" id="menu-tab" data-bs-toggle="tab" data-bs-target="#menu-pane" type="button">
+				Gestione Menù
 			</button>
 		</li>
 	</ul>
 
-	<!-- Contenuto delle Schede -->
+	<!-- Contenuto schede -->
 	<div class="tab-content" id="dashboardTabsContent">
 
-		<!-- SCHEDA 1: PROFILO -->
-		<div class="tab-pane fade show active p-4 border border-top-0 rounded-bottom bg-white" id="profilo-pane"
-		    tabindex="0">
+		<!-- Modifica info ristorante -->
+		<div class="tab-pane fade show active p-4 border border-top-0 rounded-bottom bg-white" id="profilo-pane">
 			<h4 class="mb-3">Informazioni Generali</h4>
-			<!-- Qui andrà il form con i dati del ristorante -->
+			<form id="formProfiloRistorante">
+				<div class="row mb-3">
+					<div class="col-md-6">
+						<label for="nomeRistorante" class="form-label">Nome Ristorante</label>
+						<input type="text" class="form-control" id="nomeRistorante" placeholder="Es. Mario's Burger"
+						       required>
+					</div>
+					<div class="col-md-6">
+						<label for="partitaIva" class="form-label">Partita IVA</label>
+						<input type="text" class="form-control" id="partitaIva" placeholder="11 cifre" required>
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					<div class="col-md-6">
+						<label for="telefono" class="form-label">Numero di Telefono</label>
+						<input type="tel" class="form-control" id="telefono" placeholder="Es. 02 1234567" required>
+					</div>
+					<div class="col-md-6">
+						<label for="emailRistorante" class="form-label">Email Contatto</label>
+						<input type="email" class="form-control" id="emailRistorante" placeholder="info@mariosburger.it"
+						       required>
+					</div>
+				</div>
+
+				<div class="mb-4">
+					<label for="indirizzoRistorante" class="form-label">Indirizzo</label>
+					<input type="text" class="form-control" id="indirizzoRistorante" placeholder="Via Roma 1, Milano"
+					       required>
+				</div>
+
+				<div class="d-flex justify-content-between">
+					<button type="submit" class="btn btn-primary">Salva Modifiche</button>
+				</div>
+			</form>
 		</div>
 
-		<!-- SCHEDA 2: MENU -->
-		<div class="tab-pane fade p-4 border border-top-0 rounded-bottom bg-white" id="menu-pane"
-		     tabindex="0">
+		<!-- Modifica menù -->
+		<!-- Modifica menù -->
+		<div class="tab-pane fade p-4 border border-top-0 rounded-bottom bg-white" id="menu-pane">
 			<div class="d-flex justify-content-between align-items-center mb-4">
 				<h4 class="m-0">I tuoi piatti</h4>
 				<div>
-					<!-- Qui andranno i pulsanti per aggiungere piatti -->
+					<button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal"
+					        data-bs-target="#creaPiattoModal">
+						<i class="bi bi-plus-lg"></i> Crea Piatto Personalizzato
+					</button>
+					<button type="button" class="btn btn-primary">
+						<i class="bi bi-journal-plus"></i> Aggiungi da Catalogo
+					</button>
 				</div>
 			</div>
-			<!-- Qui andrà la griglia con i piatti inseriti -->
+
+			<!-- Griglia dei piatti nel menù -->
+			<div class="row" id="contenitore-piatti">
+				<!-- I piatti verranno inseriti qui dinamicamente -->
+			</div>
 		</div>
+
+		<!-- Template per la card del piatto -->
+		<template id="modello-piatto">
+			<div class="col-md-4 mb-4">
+				<div class="card h-100 shadow-sm">
+					<img src="" class="card-img-top foto-piatto" alt="Foto piatto"
+					     style="height: 200px; object-fit: cover;">
+					<div class="card-body d-flex flex-column">
+						<div class="d-flex justify-content-between align-items-start mb-2">
+							<h5 class="card-title nome-piatto mb-0"></h5>
+							<span class="badge bg-secondary tipologia-piatto"></span>
+						</div>
+						<h6 class="text-success fw-bold prezzo-piatto"></h6>
+						<p class="card-text ingredienti-piatto small text-muted flex-grow-1"></p>
+						<div class="d-flex justify-content-end mt-2">
+							<button class="btn btn-sm btn-outline-danger btn-rimuovi"><i class="bi bi-trash"></i>
+								Rimuovi
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</template>
 
 	</div>
 </div>
+
+<!-- Modale Crea Piatto Personalizzato -->
+<div class="modal fade" id="creaPiattoModal" tabindex="-1" aria-labelledby="creaPiattoModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="creaPiattoModalLabel">Crea un nuovo piatto</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="formCreaPiatto">
+					<div class="mb-3">
+						<label for="nomeNuovoPiatto" class="form-label">Nome Piatto</label>
+						<input type="text" class="form-control" id="nomeNuovoPiatto" required>
+					</div>
+					<div class="row mb-3">
+						<div class="col-md-6">
+							<label for="tipologiaNuovoPiatto" class="form-label">Tipologia</label>
+							<!-- Potremmo usare una select o un input text, a seconda delle preferenze -->
+							<input type="text" class="form-control" id="tipologiaNuovoPiatto"
+							       placeholder="Es. Panino, Dessert..." required>
+						</div>
+						<div class="col-md-6">
+							<label for="prezzoNuovoPiatto" class="form-label">Prezzo (€)</label>
+							<input type="number" class="form-control" id="prezzoNuovoPiatto" step="0.01" min="0"
+							       required>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label for="ingredientiNuovoPiatto" class="form-label">Ingredienti</label>
+						<textarea class="form-control" id="ingredientiNuovoPiatto" rows="3" required></textarea>
+						<div class="form-text">Inserisci gli ingredienti, separandoli con una virgola.
+						</div>
+					</div>
+					<div class="mb-3">
+						<label for="fotoNuovoPiatto" class="form-label">Carica immagine</label>
+						<input type="url" class="form-control" id="fotoNuovoPiatto" placeholder="https://..." required>
+						<div class="form-text">Per ora inseriamo l'URL di un'immagine. Quando faremo il backend potremmo
+							gestire l'upload.
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+				<button type="button" class="btn btn-primary" onclick="salvaNuovoPiatto()">Salva Piatto</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="meals.js"></script>
+<script>
+	let menuRistorante = [];    // piatti attualmente nel menù
+
+	// 2. Funzione per stampare i piatti nella griglia
+	function aggiornaGrigliaMenu() {
+		const contenitore = document.getElementById('contenitore-piatti');
+		const template = document.getElementById('modello-piatto');
+		contenitore.innerHTML = '';
+
+		menuRistorante.forEach((piatto, index) => {
+			const clone = template.content.cloneNode(true);
+			clone.querySelector('.foto-piatto').src = piatto.strMealThumb;
+			clone.querySelector('.nome-piatto').textContent = piatto.strMeal;
+			clone.querySelector('.tipologia-piatto').textContent = piatto.strCategory;
+
+			// Prezzo. Se non presente, usiamo 5.00€ di default
+			let prezzo = piatto.prezzo || 5.00;
+			clone.querySelector('.prezzo-piatto').textContent = `€ ${prezzo.toFixed(2)}`;
+
+			// trasformiamo ingredienti in stringa
+			clone.querySelector('.ingredienti-piatto').textContent = piatto.ingredients.join(', ');
+
+			// Tasto Rimuovi
+			clone.querySelector('.btn-rimuovi').addEventListener('click', () => {
+				menuRistorante.splice(index, 1);
+				aggiornaGrigliaMenu();
+			});
+
+			contenitore.appendChild(clone);
+		});
+	}
+
+	// 3. Test: Aggiungiamo i primi due piatti per vedere come rendono!
+	menuRistorante.push(catalogoPiatti[0]);
+	menuRistorante.push(catalogoPiatti[1]);
+	aggiornaGrigliaMenu();
+
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
