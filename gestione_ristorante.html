@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it-IT">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -95,14 +95,22 @@
 			<div class="d-flex justify-content-between align-items-center mb-4">
 				<h4 class="m-0">I tuoi piatti</h4>
 				<div>
-					<button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal"
-					        data-bs-target="#creaPiattoModal">
+					<button type="button" class="btn btn-outline-primary" onclick="apriModalePerNuovo()">
 						<i class="bi bi-plus-lg"></i> Crea Piatto Personalizzato
 					</button>
-					<button type="button" class="btn btn-primary">
+					<button type="button" class="btn btn-primary" data-bs-toggle="modal"
+					        data-bs-target="#catalogoModal">
 						<i class="bi bi-journal-plus"></i> Aggiungi da Catalogo
 					</button>
 				</div>
+			</div>
+
+			<!--Messaggio menù vuoto-->
+			<div class="d-flex justify-content-between align-items-center mb-4">
+			</div>
+			<div id="messaggio-vuoto" class="text-center text-muted my-5 d-none">
+				<i class="bi bi-journal-x" style="font-size: 3rem;"></i>
+				<p class="mt-2">Il tuo menù è vuoto. Inizia ad aggiungere dei piatti!</p>
 			</div>
 
 			<!-- Griglia dei piatti nel menù -->
@@ -125,6 +133,9 @@
 						<h6 class="text-success fw-bold prezzo-piatto"></h6>
 						<p class="card-text ingredienti-piatto small text-muted flex-grow-1"></p>
 						<div class="d-flex justify-content-end mt-2">
+							<button class="btn btn-sm btn-outline-primary me-2 btn-modifica"><i
+									class="bi bi-pencil"></i> Modifica
+							</button>
 							<button class="btn btn-sm btn-outline-danger btn-rimuovi"><i class="bi bi-trash"></i>
 								Rimuovi
 							</button>
@@ -137,51 +148,82 @@
 	</div>
 </div>
 
-<!-- Modale Crea Piatto Personalizzato -->
-<div class="modal fade" id="creaPiattoModal" tabindex="-1" aria-labelledby="creaPiattoModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
+<!--Modale scelta piatto da catalogo-->
+<div class="modal fade" id="catalogoModal" tabindex="-1" aria-labelledby="catalogoModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-scrollable">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h5 class="modal-title" id="creaPiattoModalLabel">Crea un nuovo piatto</h5>
+				<h5 class="modal-title" id="catalogoModalLabel">Seleziona dal Catalogo</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
 			<div class="modal-body">
-				<form id="formCreaPiatto">
+				<div class="list-group" id="lista-catalogo">
+				</div>
+
+				<!-- Template per elemento del catalogo -->
+				<template id="modello-elemento-catalogo">
+					<div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+						<div class="d-flex align-items-center">
+							<img src="" alt="" class="rounded me-3 foto-catalogo"
+							     style="width: 50px; height: 50px; object-fit: cover;">
+							<div>
+								<h6 class="mb-0 nome-catalogo"></h6>
+								<small class="text-muted tipologia-catalogo"></small>
+							</div>
+						</div>
+						<button class="btn btn-sm btn-outline-success btn-aggiungi-catalogo">
+							<i class="bi bi-plus-lg"></i> Aggiungi
+						</button>
+					</div>
+				</template>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modale crea piatto personalizzato o modifica piatto nel menù -->
+<div class="modal fade" id="modalPiatto" tabindex="-1" aria-labelledby="modalPiattoLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="modalPiattoLabel">Gestione Piatto</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="formPiatto">
+					<input type="hidden" id="piattoIndice" value="-1">
+
 					<div class="mb-3">
-						<label for="nomeNuovoPiatto" class="form-label">Nome Piatto</label>
-						<input type="text" class="form-control" id="nomeNuovoPiatto" required>
+						<label for="piattoNome" class="form-label">Nome Piatto</label>
+						<input type="text" class="form-control" id="piattoNome" required>
 					</div>
 					<div class="row mb-3">
 						<div class="col-md-6">
-							<label for="tipologiaNuovoPiatto" class="form-label">Tipologia</label>
-							<!-- Potremmo usare una select o un input text, a seconda delle preferenze -->
-							<input type="text" class="form-control" id="tipologiaNuovoPiatto"
+							<label for="piattoTipologia" class="form-label">Tipologia</label>
+							<input type="text" class="form-control" id="piattoTipologia"
 							       placeholder="Es. Panino, Dessert..." required>
 						</div>
 						<div class="col-md-6">
-							<label for="prezzoNuovoPiatto" class="form-label">Prezzo (€)</label>
-							<input type="number" class="form-control" id="prezzoNuovoPiatto" step="0.01" min="0"
-							       required>
+							<label for="piattoPrezzo" class="form-label">Prezzo (€)</label>
+							<input type="number" class="form-control" id="piattoPrezzo" step="0.01" min="0" required>
 						</div>
 					</div>
 					<div class="mb-3">
-						<label for="ingredientiNuovoPiatto" class="form-label">Ingredienti</label>
-						<textarea class="form-control" id="ingredientiNuovoPiatto" rows="3" required></textarea>
-						<div class="form-text">Inserisci gli ingredienti, separandoli con una virgola.
-						</div>
+						<label for="piattoIngredienti" class="form-label">Ingredienti (separati da virgola)</label>
+						<textarea class="form-control" id="piattoIngredienti" rows="3" required></textarea>
 					</div>
 					<div class="mb-3">
-						<label for="fotoNuovoPiatto" class="form-label">Carica immagine</label>
-						<input type="url" class="form-control" id="fotoNuovoPiatto" placeholder="https://..." required>
-						<div class="form-text">Per ora inseriamo l'URL di un'immagine. Quando faremo il backend potremmo
-							gestire l'upload.
-						</div>
+						<label for="piattoFoto" class="form-label">URL Foto</label>
+						<input type="url" class="form-control" id="piattoFoto" required>
 					</div>
 				</form>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-				<button type="button" class="btn btn-primary" onclick="salvaNuovoPiatto()">Salva Piatto</button>
+				<button type="submit" form="formPiatto" class="btn btn-primary" id="btnSalvaPiatto">Salva</button>
 			</div>
 		</div>
 	</div>
@@ -195,7 +237,15 @@
 	function aggiornaGrigliaMenu() {
 		const contenitore = document.getElementById('contenitore-piatti');
 		const template = document.getElementById('modello-piatto');
+		const messaggioVuoto = document.getElementById('messaggio-vuoto');
 		contenitore.innerHTML = '';
+
+		// Mostra messaggio se il menù è vuoto
+		if (menuRistorante.length === 0) {
+			messaggioVuoto.classList.remove('d-none');
+		} else {
+			messaggioVuoto.classList.add('d-none');
+		}
 
 		menuRistorante.forEach((piatto, index) => {
 			const clone = template.content.cloneNode(true);
@@ -210,6 +260,11 @@
 			// trasformiamo ingredienti in stringa
 			clone.querySelector('.ingredienti-piatto').textContent = piatto.ingredients.join(', ');
 
+			// Tasto Modifica
+			clone.querySelector('.btn-modifica').addEventListener('click', () => {
+				apriModalePerModifica(index);
+			});
+
 			// Tasto Rimuovi
 			clone.querySelector('.btn-rimuovi').addEventListener('click', () => {
 				menuRistorante.splice(index, 1);
@@ -220,10 +275,116 @@
 		});
 	}
 
-	// 3. Test: Aggiungiamo i primi due piatti per vedere come rendono!
-	menuRistorante.push(catalogoPiatti[0]);
-	menuRistorante.push(catalogoPiatti[1]);
 	aggiornaGrigliaMenu();
+
+	// Popolamento catalogo con i piatti
+	function popolaModaleCatalogo() {
+		const listaCatalogo = document.getElementById('lista-catalogo');
+		const template = document.getElementById('modello-elemento-catalogo');
+		listaCatalogo.innerHTML = '';
+
+		catalogoPiatti.forEach(piatto => {
+			const clone = template.content.cloneNode(true);
+			const img = clone.querySelector('.foto-catalogo');
+			img.src = piatto.strMealThumb;
+			img.alt = piatto.strMeal;
+
+			clone.querySelector('.nome-catalogo').textContent = piatto.strMeal;
+			clone.querySelector('.tipologia-catalogo').textContent = piatto.strCategory;
+
+			// Aggiunta piatto al menù
+			clone.querySelector('.btn-aggiungi-catalogo').addEventListener('click', () => {
+				const giaPresente = menuRistorante.find(p => p.idMeal === piatto.idMeal);
+				if (!giaPresente) {
+					bootstrap.Modal.getInstance(document.getElementById('catalogoModal')).hide();
+
+					// Aprimo modale per confermare aggiunta e inserire prezzo
+					document.getElementById('modalPiattoLabel').textContent = "Conferma Piatto e Imposta Prezzo";
+					document.getElementById('btnSalvaPiatto').textContent = "Aggiungi al Menù";
+
+					document.getElementById('piattoNome').value = piatto.strMeal;
+					document.getElementById('piattoTipologia').value = piatto.strCategory;
+					document.getElementById('piattoPrezzo').value = ''; // Lasciamo vuoto per obbligare l'inserimento
+					document.getElementById('piattoIngredienti').value = piatto.ingredients.join(', ');
+					document.getElementById('piattoFoto').value = piatto.strMealThumb;
+
+					document.getElementById('piattoIndice').value = "-1"; // nuovo inserimento
+
+					document.getElementById('formPiatto').dataset.idMeal = piatto.idMeal;
+
+					bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPiatto')).show();
+				} else {
+					alert('Piatto già presente nel tuo menù!');
+				}
+			});
+			listaCatalogo.appendChild(clone);
+		});
+	}
+
+	popolaModaleCatalogo();
+
+	// Apre la modale vuota per creare un nuovo piatto personalizzato
+	function apriModalePerNuovo() {
+		document.getElementById('modalPiattoLabel').textContent = "Crea un nuovo piatto";
+		document.getElementById('btnSalvaPiatto').textContent = "Salva Piatto";
+		document.getElementById('formPiatto').reset(); // Svuota i campi
+		document.getElementById('piattoIndice').value = "-1"; // -1 => nuovo piatto
+
+		delete document.getElementById('formPiatto').dataset.idMeal;
+
+		const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPiatto'));
+		modal.show();
+	}
+
+	// Apre la modale pre-compilata per modificare un piatto
+	function apriModalePerModifica(index) {
+		const piatto = menuRistorante[index];
+
+		document.getElementById('modalPiattoLabel').textContent = "Modifica Piatto";
+		document.getElementById('btnSalvaPiatto').textContent = "Applica Modifiche";
+
+		// Pre-compiliamo i campi con i dati attuali
+		document.getElementById('piattoNome').value = piatto.strMeal;
+		document.getElementById('piattoTipologia').value = piatto.strCategory;
+		document.getElementById('piattoPrezzo').value = piatto.prezzo || '';
+		document.getElementById('piattoIngredienti').value = piatto.ingredients.join(', ');
+		document.getElementById('piattoFoto').value = piatto.strMealThumb;
+
+		document.getElementById('piattoIndice').value = index; // Salviamo l'indice del piatto da modificare
+
+		const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPiatto'));
+		modal.show();
+	}
+
+	// Gestione submit del form per creare/modificare piatto
+	document.getElementById('formPiatto').addEventListener('submit', function (event) {
+		event.preventDefault();
+
+		const index = parseInt(document.getElementById('piattoIndice').value);
+
+		const datiPiatto = {
+			strMeal: document.getElementById('piattoNome').value.trim(),
+			strCategory: document.getElementById('piattoTipologia').value.trim(),
+			prezzo: parseFloat(document.getElementById('piattoPrezzo').value),
+			ingredients: document.getElementById('piattoIngredienti').value.split(',').map(ing => ing.trim()),
+			strMealThumb: document.getElementById('piattoFoto').value.trim()
+		};
+
+		//se è un nuovo piatto, lo aggiungiamo, altrimenti aggiorniamo quello esistente.
+		if (index === -1) {
+			if (this.dataset.idMeal) {
+				datiPiatto.idMeal = this.dataset.idMeal;
+				delete this.dataset.idMeal;
+			}
+			menuRistorante.push(datiPiatto);
+		} else {
+			if (menuRistorante[index].idMeal) datiPiatto.idMeal = menuRistorante[index].idMeal;
+			menuRistorante[index] = datiPiatto;
+		}
+
+		aggiornaGrigliaMenu();
+		bootstrap.Modal.getInstance(document.getElementById('modalPiatto')).hide();
+	});
 
 </script>
 
