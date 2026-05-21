@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="it-IT">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Fast Food</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+	      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+<!--Navbar-->
+<nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm">
+	<div class="container">
+		<a class="navbar-brand fw-bold" href="homepage.html">
+			<i class="bi bi-shop"></i> FastFood App
+		</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav me-auto">
+				<li class="nav-item">
+					<a class="nav-link active" href="homepage.html">Home</a>
+				</li>
+			</ul>
+			<div class="d-flex">
+				<button class="btn btn-outline-light me-2">Accedi</button>
+				<button class="btn btn-light text-danger fw-bold">Registrati</button>
+			</div>
+		</div>
+	</div>
+</nav>
+
+<!--Hero section-->
+<div class="bg-danger-subtle py-5 border-bottom border-danger-subtle text-center mb-5">
+	<div class="container">
+		<h1 class="display-5 fw-bold text-danger mb-3">Trova il fast food perfetto per te</h1>
+		<p class="lead text-dark mb-4">Cerca per nome del locale o per città e scopri i menù disponibili.</p>
+
+		<div class="row justify-content-center">
+			<div class="col-md-8">
+				<form id="formRicerca" class="d-flex bg-white p-2 rounded-pill shadow-sm">
+					<select class="form-select border-0 bg-transparent w-auto ms-2" id="tipoRicerca"
+					        aria-label="Scegli il tipo di ricerca">
+						<option value="nome">Nome</option>
+						<option value="luogo">Città</option>
+					</select>
+
+					<div class="vr mx-2"></div>
+					<input class="form-control border-0 shadow-none bg-transparent" type="search" id="testoRicerca"
+					       placeholder="Cosa stai cercando?" aria-label="Cerca ristorante" required>
+
+					<button class="btn btn-danger rounded-pill px-4" type="submit">
+						<i class="bi bi-search"></i> Cerca
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!--Body ristoranti-->
+<div class="container mb-5">
+	<!-- Per tenere in ordine se si aggiungono tasti di allineamento -->
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<h3 id="titolo-risultati">Tutti i Ristoranti</h3>
+	</div>
+
+	<div id="nessun-risultato" class="alert alert-warning d-none text-center" role="alert">
+		<!-- Usiamo i (standard per le icons) e d-block per andare a capo-->
+		<i class="bi bi-emoji-frown fs-4 d-block mb-2"></i>
+		Nessun ristorante trovato con questi criteri di ricerca. Prova a cambiare i filtri!
+	</div>
+
+	<div class="row g-4" id="griglia-ristoranti"></div>
+</div>
+
+<template id="modello-card-ristorante">
+	<div class="col-md-6 col-lg-4">
+		<div class="card h-100 shadow-sm border-0">
+			<img src="" class="card-img-top object-fit-cover foto-ristorante" alt="..." style="height: 200px;">
+			<div class="card-body">
+				<h5 class="card-title fw-bold nome-ristorante"></h5>
+				<p class="card-text text-muted mb-2">
+					<i class="bi bi-geo-alt-fill text-danger"></i> <span class="luogo-ristorante"></span>
+				</p>
+				<div class="d-flex flex-wrap gap-1 mb-3 categorie-ristorante">
+				</div>
+			</div>
+			<div class="card-footer bg-white border-0 pt-0">
+				<a href="#" class="btn btn-outline-danger w-100 btn-vedi-menu">Guarda il Menù</a>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+<script>
+	// 1. Array di Dati "Fittizi" (Mock) per simulare il Database
+	// Quando faremo il backend, questi dati arriveranno tramite una fetch() da MongoDB
+	const ristorantiDB = [
+		{
+			id: 1,
+			nome: "Burger King",
+			luogo: "Milano",
+			immagine: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=600&q=80",
+			categorie: ["Hamburger", "Fast Food"]
+		},
+		{
+			id: 2,
+			nome: "Pizzeria Da Michele",
+			luogo: "Napoli",
+			immagine: "https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=600&q=80",
+			categorie: ["Pizza", "Italiana"]
+		},
+		{
+			id: 3,
+			nome: "Sushi Zen",
+			luogo: "Milano",
+			immagine: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80",
+			categorie: ["Sushi", "Giapponese"]
+		},
+		{
+			id: 4,
+			nome: "Smash Burger Burger",
+			luogo: "Roma",
+			immagine: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80",
+			categorie: ["Hamburger", "Americano"]
+		}
+	];
+
+	function mostraRistoranti(ristorantiDaMostrare) {
+		const griglia = document.getElementById('griglia-ristoranti');
+		const template_rist = document.getElementById('modello-card-ristorante');
+		const alertNessunRisultato = document.getElementById('nessun-risultato');
+		griglia.innerHTML = '';
+
+		// Ricerca fallita
+		if (ristorantiDaMostrare.length === 0) {
+			alertNessunRisultato.classList.remove('d-none');
+			return;
+		} else {
+			alertNessunRisultato.classList.add('d-none');   // viene di nuovo nascosto alert
+		}
+
+		// Cloniamo il template per ogni ristorante
+		ristorantiDaMostrare.forEach(ristorante => {
+			const clone = template_rist.content.cloneNode(true);
+			clone.querySelector('.foto-ristorante').src = ristorante.immagine;
+			clone.querySelector('.foto-ristorante').alt = `Foto di ${ristorante.nome}`;
+			clone.querySelector('.nome-ristorante').textContent = ristorante.nome;
+			clone.querySelector('.luogo-ristorante').textContent = ristorante.luogo;
+
+			// crea badge categorie dinamicamente
+			const contenitoreCategorie = clone.querySelector('.categorie-ristorante');
+			ristorante.categorie.forEach(categoria => {
+				const badge = document.createElement('span');
+				badge.className = 'badge bg-light text-dark border';
+				badge.textContent = String(categoria);
+				contenitoreCategorie.appendChild(badge);
+			});
+
+			// TODO: Aggiungere funzionalità al tasto "Guarda il Menù"
+			clone.querySelector('.btn-vedi-menu').addEventListener('click', (e) => {
+				e.preventDefault();
+				alert(`Hai cliccato per vedere il menù di: ${ristorante.nome} (ID: ${ristorante.id})`);
+				// In futuro qui faremo un redirect alla pagina del menù specifico
+			});
+
+			griglia.appendChild(clone);
+		});
+	}
+
+	// mostra tutti i ristoranti all'inizio
+	mostraRistoranti(ristorantiDB);
+
+	// logica di ricerca
+	document.getElementById('formRicerca').addEventListener('submit', function (event) {
+		event.preventDefault();
+
+		const tipoRicerca = document.getElementById('tipoRicerca').value;
+		const testoCercato = document.getElementById('testoRicerca').value.toLowerCase().trim();
+
+		// TODO: fare i filtri nel backend
+		const risultatiCercati = ristorantiDB.filter(ristorante => {
+			if (tipoRicerca === 'nome') {
+				return ristorante.nome.toLowerCase().includes(testoCercato);
+			} else if (tipoRicerca === 'luogo') {
+				return ristorante.luogo.toLowerCase().includes(testoCercato);
+			}
+		});
+
+		// cambia titolo e mostra risultato
+		document.getElementById('titolo-risultati').textContent = `Risultati per: "${testoCercato}"`;
+		mostraRistoranti(risultatiCercati);
+	});
+</script>
+</body>
+</html>
