@@ -3,7 +3,7 @@ import schemaRistorante from "../models/ristorante.js";
 
 const router = express.Router();
 
-// 1. GET /api/ristoranti/me -> Ottieni il profilo e il menù
+// GET profilo e menù
 router.get("/me", async (req, res) => {
     try {
         // Simuliamo l'utente loggato prendendo il primo ristorante nel DB
@@ -26,12 +26,11 @@ router.get("/me", async (req, res) => {
     }
 });
 
-// 2. PUT /api/ristoranti/me -> Aggiorna le informazioni generali
+// PUT aggiorna informazioni ristorante (es. nome, indirizzo, telefono, email)
 router.put("/me", async (req, res) => {
     try {
         const ristorante = await schemaRistorante.findOne();
 
-        // Usiamo findByIdAndUpdate che è la best practice indicata nelle tue slide
         const updated = await schemaRistorante.findByIdAndUpdate(
             ristorante._id,
             { $set: req.body }, // req.body conterrà i dati inviati dal form HTML

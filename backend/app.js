@@ -7,6 +7,7 @@ import cors from "cors";
 import {connectDB} from "./src/config/database.js";
 
 import routesRistorante from "./src/routes/routesRistorante.js";
+import routesCatalogo from "./src/routes/routesCatalogo.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +19,8 @@ app.use(express.json());
 await connectDB();
 
 app.use("/api/ristoranti", routesRistorante);
+
+app.use("/api/catalogo", routesCatalogo);
 
 app.listen(PORT, () => {
 	console.log(`Server in esecuzione sulla porta ${PORT}`);
