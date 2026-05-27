@@ -99,7 +99,7 @@
 						<i class="bi bi-plus-lg"></i> Crea Piatto Personalizzato
 					</button>
 					<button type="button" class="btn btn-primary" data-bs-toggle="modal"
-					        data-bs-target="#catalogoModal">
+					        data-bs-target="#catalogoModal" onclick="popolaModaleCatalogo()">
 						<i class="bi bi-journal-plus"></i> Aggiungi da Catalogo
 					</button>
 				</div>
@@ -116,6 +116,11 @@
 			<!-- Griglia dei piatti nel menù -->
 			<div class="row" id="contenitore-piatti">
 				<!-- I piatti verranno inseriti qui dinamicamente -->
+			</div>
+			<div class="mt-4 pt-3 border-top d-flex justify-content-end">
+				<button type="button" class="btn btn-success btn-lg shadow-sm" id="btnSalvaMenu">
+					<i class="bi bi-cloud-arrow-up"></i> Salva Menù
+				</button>
 			</div>
 		</div>
 
@@ -229,9 +234,64 @@
 	</div>
 </div>
 
-<script src="meals.js"></script>
 <script>
-	let menuRistorante = [];    // piatti attualmente nel menù
+	let menuRistorante = [];
+
+	// Aggiornamento dati ristorante
+	document.getElementById('formProfilo').addEventListener('submit', async function (event) {
+		event.preventDefault();
+
+		const datiAggiornati = {
+			nome: document.getElementById('nomeAzienda').value,
+			partitaIva: document.getElementById('piva').value,
+			telefono: document.getElementById('telefono').value,
+			email: document.getElementById('email').value,
+			indirizzo: document.getElementById('indirizzo').value
+		};
+
+		try {
+			const response = await fetch('http://localhost:3000/api/ristoranti/me', {
+				method: 'PUT',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify(datiAggiornati)
+			});
+
+			const risultato = await response.json();
+
+			if (response.ok) {
+				alert("Profilo aggiornato con successo!");
+			} else {
+				alert("Errore: " + risultato.message + "\n" + (risultato.dettagli || ""));
+			}
+		} catch (error) {
+			alert("Errore di connessione al server.");
+		}
+	});
+
+	// all'avvio carica tutti i dati
+	document.addEventListener('DOMContentLoaded', async () => {
+		try {
+			const response = await fetch('http://localhost:3000/api/ristoranti/me');
+			const ristorante = await response.json();
+
+			if (!response.ok) {
+				alert("Errore nel caricamento dei dati del ristorante: " + ristorante.message);
+				return;
+			}
+
+			document.getElementById('nomeAzienda').value = ristorante.nome;
+			document.getElementById('piva').value = ristorante.partitaIva;
+			document.getElementById('telefono').value = ristorante.telefono;
+			document.getElementById('email').value = ristorante.email;
+			document.getElementById('indirizzo').value = ristorante.indirizzo;
+
+			menuRistorante = ristorante.menu;
+			aggiornaGrigliaMenu(); //
+
+		} catch (error) {
+			console.error("Errore:", error);
+		}
+	});
 
 	// Funzione per stampare i piatti del menu
 	function aggiornaGrigliaMenu() {
@@ -277,51 +337,81 @@
 
 	aggiornaGrigliaMenu();
 
-	// Popolamento catalogo con i piatti
-	function popolaModaleCatalogo() {
-		const listaCatalogo = document.getElementById('lista-catalogo');
-		const template = document.getElementById('modello-elemento-catalogo');
-		listaCatalogo.innerHTML = '';
-
-		catalogoPiatti.forEach(piatto => {
-			const clone = template.content.cloneNode(true);
-			const img = clone.querySelector('.foto-catalogo');
-			img.src = piatto.strMealThumb;
-			img.alt = piatto.strMeal;
-
-			clone.querySelector('.nome-catalogo').textContent = piatto.strMeal;
-			clone.querySelector('.tipologia-catalogo').textContent = piatto.strCategory;
-
-			// Aggiunta piatto al menù
-			clone.querySelector('.btn-aggiungi-catalogo').addEventListener('click', () => {
-				const giaPresente = menuRistorante.find(p => p.idMeal === piatto.idMeal);
-				if (!giaPresente) {
-					bootstrap.Modal.getInstance(document.getElementById('catalogoModal')).hide();
-
-					// Aprimo modale per confermare aggiunta e inserire prezzo
-					document.getElementById('modalPiattoLabel').textContent = "Conferma Piatto e Imposta Prezzo";
-					document.getElementById('btnSalvaPiatto').textContent = "Aggiungi al Menù";
-
-					document.getElementById('piattoNome').value = piatto.strMeal;
-					document.getElementById('piattoTipologia').value = piatto.strCategory;
-					document.getElementById('piattoPrezzo').value = ''; // Lasciamo vuoto per obbligare l'inserimento
-					document.getElementById('piattoIngredienti').value = piatto.ingredients.join(', ');
-					document.getElementById('piattoFoto').value = piatto.strMealThumb;
-
-					document.getElementById('piattoIndice').value = "-1"; // nuovo inserimento
-
-					document.getElementById('formPiatto').dataset.idMeal = piatto.idMeal;
-
-					bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPiatto')).show();
-				} else {
-					alert('Piatto già presente nel tuo menù!');
-				}
+	// Salvataggio del menù nel db
+	document.getElementById('btnSalvaMenu').addEventListener('click', async () => {
+		try {
+			const response = await fetch('http://localhost:3000/api/ristoranti/me/menu', {
+				method: 'PUT',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify(menuRistorante)
 			});
-			listaCatalogo.appendChild(clone);
-		});
-	}
 
-	popolaModaleCatalogo();
+			const risultato = await response.json();
+
+			if (response.ok) {
+				alert("Menù salvato correttamente nel database!");
+			} else {
+				alert("Errore nel salvataggio: " + risultato.message + "\n" + (risultato.dettagli || ""));
+			}
+		} catch (error) {
+			alert("Errore di connessione al server durante il salvataggio del menù.");
+		}
+	});
+
+	// Popolamento catalogo con i piatti
+	async function popolaModaleCatalogo() {
+		try {
+			// Scarichiamo i dati dall'API
+			const response = await fetch('http://localhost:3000/api/catalogo');
+			if (!response.ok) {
+				alert("Errore nel caricamento del catalogo dal server.");
+				return;
+			}
+			const catalogoPiatti = await response.json(); // Ecco l'array vero!
+
+			const listaCatalogo = document.getElementById('lista-catalogo');
+			const template = document.getElementById('modello-elemento-catalogo');
+			listaCatalogo.innerHTML = '';
+
+			catalogoPiatti.forEach(piatto => {
+				const clone = template.content.cloneNode(true);
+				const img = clone.querySelector('.foto-catalogo');
+				img.src = piatto.strMealThumb;
+				img.alt = piatto.strMeal;
+
+				clone.querySelector('.nome-catalogo').textContent = piatto.strMeal;
+				clone.querySelector('.tipologia-catalogo').textContent = piatto.strCategory;
+
+				// Aggiunta piatto al menù
+				clone.querySelector('.btn-aggiungi-catalogo').addEventListener('click', () => {
+					const giaPresente = menuRistorante.find(p => p.idMeal === piatto.idMeal);
+					if (!giaPresente) {
+						bootstrap.Modal.getInstance(document.getElementById('catalogoModal')).hide();
+
+						document.getElementById('modalPiattoLabel').textContent = "Conferma Piatto e Imposta Prezzo";
+						document.getElementById('btnSalvaPiatto').textContent = "Aggiungi al Menù";
+
+						document.getElementById('piattoNome').value = piatto.strMeal;
+						document.getElementById('piattoTipologia').value = piatto.strCategory || "Vario";
+						document.getElementById('piattoPrezzo').value = '';
+						document.getElementById('piattoIngredienti').value = piatto.ingredients ? piatto.ingredients.join(', ') : "";
+						document.getElementById('piattoFoto').value = piatto.strMealThumb;
+
+						document.getElementById('piattoIndice').value = "-1";
+						document.getElementById('formPiatto').dataset.idMeal = piatto.idMeal;
+
+						bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPiatto')).show();
+					} else {
+						alert('Piatto già presente nel tuo menù!');
+					}
+				});
+				listaCatalogo.appendChild(clone);
+			});
+
+		} catch (error) {
+			console.error("Errore di connessione al catalogo:", error);
+		}
+	}
 
 	// Apre la modale vuota per creare un nuovo piatto personalizzato
 	function apriModalePerNuovo() {
