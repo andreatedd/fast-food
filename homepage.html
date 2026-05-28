@@ -45,7 +45,7 @@
 					<select class="form-select border-0 bg-transparent w-auto ms-2" id="tipoRicerca"
 					        aria-label="Scegli il tipo di ricerca">
 						<option value="nome">Nome</option>
-						<option value="luogo">Città</option>
+						<option value="luogo">Indirizzo</option>
 					</select>
 
 					<div class="vr mx-2"></div>
@@ -61,7 +61,7 @@
 	</div>
 </div>
 
-<!--Body ristoranti-->
+<!--Elenco ristoranti-->
 <div class="container mb-5">
 	<!-- Per tenere in ordine se si aggiungono tasti di allineamento -->
 	<div class="d-flex justify-content-between align-items-center mb-4">
@@ -77,6 +77,7 @@
 	<div class="row g-4" id="griglia-ristoranti"></div>
 </div>
 
+<!--Card ristorante-->
 <template id="modello-card-ristorante">
 	<div class="col-md-6 col-lg-4">
 		<div class="card h-100 shadow-sm border-0">
@@ -101,38 +102,28 @@
         crossorigin="anonymous"></script>
 
 <script>
-	// 1. Array di Dati "Fittizi" (Mock) per simulare il Database
-	// Quando faremo il backend, questi dati arriveranno tramite una fetch() da MongoDB
-	const ristorantiDB = [
-		{
-			id: 1,
-			nome: "Burger King",
-			luogo: "Milano",
-			immagine: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=600&q=80",
-			categorie: ["Hamburger", "Fast Food"]
-		},
-		{
-			id: 2,
-			nome: "Pizzeria Da Michele",
-			luogo: "Napoli",
-			immagine: "https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=600&q=80",
-			categorie: ["Pizza", "Italiana"]
-		},
-		{
-			id: 3,
-			nome: "Sushi Zen",
-			luogo: "Milano",
-			immagine: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80",
-			categorie: ["Sushi", "Giapponese"]
-		},
-		{
-			id: 4,
-			nome: "Smash Burger Burger",
-			luogo: "Roma",
-			immagine: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80",
-			categorie: ["Hamburger", "Americano"]
+	let ristorantiDB = [];
+
+	// TODO: spostare html fuori con d-none
+	async function caricaRistoranti() {
+		try {
+			const response = await fetch('http://localhost:3000/api/ristoranti');
+
+			if (!response.ok) {
+				document.getElementById('griglia-ristoranti').innerHTML =
+					`<div class="alert alert-warning w-100 text-center">Errore del server (${response.status}). Riprova più tardi.</div>`;
+				return;
+			}
+
+			ristorantiDB = await response.json();
+			mostraRistoranti(ristorantiDB);
+
+		} catch (error) {
+			console.error("Errore di connessione:", error);
+			document.getElementById('griglia-ristoranti').innerHTML =
+				'<div class="alert alert-danger w-100 text-center">Impossibile connettersi al server. Assicurati che il backend sia acceso.</div>';
 		}
-	];
+	}
 
 	function mostraRistoranti(ristorantiDaMostrare) {
 		const griglia = document.getElementById('griglia-ristoranti');
@@ -145,57 +136,64 @@
 			alertNessunRisultato.classList.remove('d-none');
 			return;
 		} else {
-			alertNessunRisultato.classList.add('d-none');   // viene di nuovo nascosto alert
+			alertNessunRisultato.classList.add('d-none');
 		}
 
-		// Cloniamo il template per ogni ristorante
 		ristorantiDaMostrare.forEach(ristorante => {
 			const clone = template_rist.content.cloneNode(true);
-			clone.querySelector('.foto-ristorante').src = ristorante.immagine;
+
+			// prendiamo prima immagine del menù, se esiste, altrimenti fallback
+			const imgFallback = "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80";
+
+			// TODO immagine scelta da ristoratore
+			clone.querySelector('.foto-ristorante').src = (ristorante.menu && ristorante.menu.length > 0 && ristorante.menu[0].strMealThumb)
+				? ristorante.menu[0].strMealThumb
+				: imgFallback;
 			clone.querySelector('.foto-ristorante').alt = `Foto di ${ristorante.nome}`;
 			clone.querySelector('.nome-ristorante').textContent = ristorante.nome;
-			clone.querySelector('.luogo-ristorante').textContent = ristorante.luogo;
+			clone.querySelector('.luogo-ristorante').textContent = ristorante.indirizzo;
 
-			// crea badge categorie dinamicamente
+			// Gestione categorie
+			// TODO: categorie scelte da ristoratore
 			const contenitoreCategorie = clone.querySelector('.categorie-ristorante');
-			ristorante.categorie.forEach(categoria => {
+			let categorieUniche = [];
+
+			if (ristorante.menu && ristorante.menu.length > 0) {
+				categorieUniche = [...new Set(ristorante.menu.map(piatto => piatto.strCategory))];
+			} else {
+				categorieUniche = ["Novità"];
+			}
+
+			categorieUniche.forEach(categoria => {
 				const badge = document.createElement('span');
 				badge.className = 'badge bg-light text-dark border';
-				badge.textContent = String(categoria);
+				badge.textContent = categoria;
 				contenitoreCategorie.appendChild(badge);
 			});
 
-			// TODO: Aggiungere funzionalità al tasto "Guarda il Menù"
-			clone.querySelector('.btn-vedi-menu').addEventListener('click', (e) => {
-				e.preventDefault();
-				alert(`Hai cliccato per vedere il menù di: ${ristorante.nome} (ID: ${ristorante.id})`);
-				// In futuro qui faremo un redirect alla pagina del menù specifico
-			});
+			clone.querySelector('.btn-vedi-menu').href = `dettaglio_ristorante.html?id=${ristorante._id}`;
 
 			griglia.appendChild(clone);
 		});
 	}
 
-	// mostra tutti i ristoranti all'inizio
-	mostraRistoranti(ristorantiDB);
+	document.addEventListener('DOMContentLoaded', caricaRistoranti);
 
-	// logica di ricerca
+	// Ricerca
 	document.getElementById('formRicerca').addEventListener('submit', function (event) {
 		event.preventDefault();
 
 		const tipoRicerca = document.getElementById('tipoRicerca').value;
 		const testoCercato = document.getElementById('testoRicerca').value.toLowerCase().trim();
 
-		// TODO: fare i filtri nel backend
 		const risultatiCercati = ristorantiDB.filter(ristorante => {
 			if (tipoRicerca === 'nome') {
 				return ristorante.nome.toLowerCase().includes(testoCercato);
 			} else if (tipoRicerca === 'luogo') {
-				return ristorante.luogo.toLowerCase().includes(testoCercato);
+				return ristorante.indirizzo.toLowerCase().includes(testoCercato);
 			}
 		});
 
-		// cambia titolo e mostra risultato
 		document.getElementById('titolo-risultati').textContent = `Risultati per: "${testoCercato}"`;
 		mostraRistoranti(risultatiCercati);
 	});

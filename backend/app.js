@@ -8,6 +8,7 @@ import {connectDB} from "./src/config/database.js";
 
 import routesRistorante from "./src/routes/routesRistorante.js";
 import routesCatalogo from "./src/routes/routesCatalogo.js";
+import routesClienti from "./src/routes/routesClienti.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,8 +46,8 @@ app.use((error, req, res, next) => {
 
 await connectDB();
 
-app.use("/api/ristoranti", routesRistorante);
-
+app.use("/api/ristoranti", routesClienti)
+app.use("/api/ristoratore", routesRistorante);
 app.use("/api/catalogo", routesCatalogo);
 
 app.listen(PORT, () => {

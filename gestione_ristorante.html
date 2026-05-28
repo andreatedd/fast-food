@@ -255,7 +255,7 @@
 		};
 
 		try {
-			const response = await fetch('http://localhost:3000/api/ristoranti/me', {
+			const response = await fetch('http://localhost:3000/api/ristoratore/me', {
 				method: 'PUT',
 				headers: {'Content-Type': 'application/json'},
 				body: JSON.stringify(datiAggiornati)
@@ -276,7 +276,7 @@
 	// all'avvio carica tutti i dati
 	document.addEventListener('DOMContentLoaded', async () => {
 		try {
-			const response = await fetch('http://localhost:3000/api/ristoranti/me');
+			const response = await fetch('http://localhost:3000/api/ristoratore/me');
 			const ristorante = await response.json();
 
 			if (!response.ok) {
@@ -345,7 +345,7 @@
 	// Salvataggio del menù nel db
 	document.getElementById('btnSalvaMenu').addEventListener('click', async () => {
 		try {
-			const response = await fetch('http://localhost:3000/api/ristoranti/me/menu', {
+			const response = await fetch('http://localhost:3000/api/ristoratore/me/menu', {
 				method: 'PUT',
 				headers: {'Content-Type': 'application/json'},
 				body: JSON.stringify(menuRistorante)
