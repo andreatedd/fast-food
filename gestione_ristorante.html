@@ -221,6 +221,11 @@
 						<textarea class="form-control" id="piattoIngredienti" rows="3" required></textarea>
 					</div>
 					<div class="mb-3">
+						<label for="piattoIstruzioni" class="form-label">Ricetta (Opzionale)</label>
+						<textarea class="form-control" id="piattoIstruzioni" rows="4"
+						          placeholder="Passaggi per la preparazione..."></textarea>
+					</div>
+					<div class="mb-3">
 						<label for="piattoFoto" class="form-label">URL Foto</label>
 						<input type="url" class="form-control" id="piattoFoto" required>
 					</div>
@@ -238,15 +243,15 @@
 	let menuRistorante = [];
 
 	// Aggiornamento dati ristorante
-	document.getElementById('formProfilo').addEventListener('submit', async function (event) {
+	document.getElementById('formProfiloRistorante').addEventListener('submit', async function (event) {
 		event.preventDefault();
 
 		const datiAggiornati = {
-			nome: document.getElementById('nomeAzienda').value,
-			partitaIva: document.getElementById('piva').value,
+			nome: document.getElementById('nomeRistorante').value,
+			partitaIva: document.getElementById('partitaIva').value,
 			telefono: document.getElementById('telefono').value,
-			email: document.getElementById('email').value,
-			indirizzo: document.getElementById('indirizzo').value
+			email: document.getElementById('emailRistorante').value,
+			indirizzo: document.getElementById('indirizzoRistorante').value
 		};
 
 		try {
@@ -279,14 +284,14 @@
 				return;
 			}
 
-			document.getElementById('nomeAzienda').value = ristorante.nome;
-			document.getElementById('piva').value = ristorante.partitaIva;
+			document.getElementById('nomeRistorante').value = ristorante.nome;
+			document.getElementById('partitaIva').value = ristorante.partitaIva;
 			document.getElementById('telefono').value = ristorante.telefono;
-			document.getElementById('email').value = ristorante.email;
-			document.getElementById('indirizzo').value = ristorante.indirizzo;
+			document.getElementById('emailRistorante').value = ristorante.email;
+			document.getElementById('indirizzoRistorante').value = ristorante.indirizzo;
 
 			menuRistorante = ristorante.menu;
-			aggiornaGrigliaMenu(); //
+			aggiornaGrigliaMenu();
 
 		} catch (error) {
 			console.error("Errore:", error);
@@ -396,6 +401,7 @@
 						document.getElementById('piattoPrezzo').value = '';
 						document.getElementById('piattoIngredienti').value = piatto.ingredients ? piatto.ingredients.join(', ') : "";
 						document.getElementById('piattoFoto').value = piatto.strMealThumb;
+						document.getElementById('piattoIstruzioni').value = piatto.strInstructions || "";
 
 						document.getElementById('piattoIndice').value = "-1";
 						document.getElementById('formPiatto').dataset.idMeal = piatto.idMeal;
@@ -439,6 +445,7 @@
 		document.getElementById('piattoPrezzo').value = piatto.prezzo || '';
 		document.getElementById('piattoIngredienti').value = piatto.ingredients.join(', ');
 		document.getElementById('piattoFoto').value = piatto.strMealThumb;
+		document.getElementById('piattoIstruzioni').value = piatto.strInstructions || "";
 
 		document.getElementById('piattoIndice').value = index; // Salviamo l'indice del piatto da modificare
 
@@ -457,7 +464,8 @@
 			strCategory: document.getElementById('piattoTipologia').value.trim(),
 			prezzo: parseFloat(document.getElementById('piattoPrezzo').value),
 			ingredients: document.getElementById('piattoIngredienti').value.split(',').map(ing => ing.trim()),
-			strMealThumb: document.getElementById('piattoFoto').value.trim()
+			strMealThumb: document.getElementById('piattoFoto').value.trim(),
+			strInstructions: document.getElementById('piattoIstruzioni').value.trim()
 		};
 
 		//se è un nuovo piatto, lo aggiungiamo, altrimenti aggiorniamo quello esistente.

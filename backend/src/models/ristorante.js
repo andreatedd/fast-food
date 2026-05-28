@@ -3,12 +3,13 @@ const { Schema } = mongoose;
 
 // Schema piatto del menù
 const schemaPiatto = new Schema({
-    idMeal: { type: String }, // Opzionale, c'è solo se il piatto arriva dal catalogo
+    idMeal: { type: String }, // c'è solo se piatto è nel catalogo
     strMeal: { type: String, required: true },
     strCategory: { type: String, required: true },
-    prezzo: { type: Number, required: true, min: 0 }, // ECCO IL PREZZO OBBLIGATORIO!
+    prezzo: { type: Number, required: true, min: 0 },
     ingredients: [{ type: String }],
-    strMealThumb: { type: String }
+    strMealThumb: { type: String },
+    strInstructions: { type: String, required: false }
 });
 
 // Schema info ristorante

@@ -34,7 +34,7 @@ router.put("/me", async (req, res, next) => {
 		const updated = await schemaRistorante.findByIdAndUpdate(
 			ristorante._id,
 			{$set: req.body}, // aggiorna solo le info nel form html
-			{new: true, runValidators: true} // true restituisce il nuovo oggetto (per mostrarlo), runValidators assicura che le validazioni vengano fatte anche in update
+			{returnDocument: 'after', runValidators: true} // after restituisce oggetto dopo la modifica, runValidators assicura che le validazioni vengano fatte anche in update
 		);
 
 		res.json(updated);
@@ -48,10 +48,13 @@ router.put("/me/menu", async (req, res, next) => {
 	try {
 		const ristorante = await schemaRistorante.findOne();
 
-		ristorante.menu = req.body;
+		const updated = await schemaRistorante.findByIdAndUpdate(
+			ristorante._id,
+			{$set: {menu: req.body}},
+			{returnDocument: 'after', runValidators: true}
+		);
 
-		await ristorante.save();
-		res.json(ristorante.menu);
+		res.json(updated.menu);
 	} catch (error) {
 		next(error);
 	}

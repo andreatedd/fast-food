@@ -6,7 +6,8 @@ const schemaCatalogo = new Schema({
     strMeal: { type: String, required: true },
     strCategory: { type: String },
     strMealThumb: { type: String },
-    ingredients: [{ type: String }]
+    ingredients: [{ type: String }],
+    strInstructions: { type: String, required: false }
 });
 
 export default mongoose.model("Catalogo", schemaCatalogo);
