@@ -65,7 +65,7 @@
 <div class="container mb-5">
 	<!-- Per tenere in ordine se si aggiungono tasti di allineamento -->
 	<div class="d-flex justify-content-between align-items-center mb-4">
-		<h3 id="titolo-risultati">Tutti i Ristoranti</h3>
+		<h3 id="titolo-risultati">Ristoranti in Evidenza</h3>
 	</div>
 
 	<div id="nessun-risultato" class="alert alert-warning d-none text-center" role="alert">
@@ -105,6 +105,7 @@
 	let ristorantiDB = [];
 
 	// TODO: spostare html fuori con d-none
+	// TODO: paginazione
 	async function caricaRistoranti() {
 		try {
 			const response = await fetch('http://localhost:3000/api/ristoranti');
@@ -180,22 +181,39 @@
 	document.addEventListener('DOMContentLoaded', caricaRistoranti);
 
 	// Ricerca
-	document.getElementById('formRicerca').addEventListener('submit', function (event) {
+	document.getElementById('formRicerca').addEventListener('submit', async function (event) {
 		event.preventDefault();
 
 		const tipoRicerca = document.getElementById('tipoRicerca').value;
-		const testoCercato = document.getElementById('testoRicerca').value.toLowerCase().trim();
+		const testoCercato = document.getElementById('testoRicerca').value.trim();
 
-		const risultatiCercati = ristorantiDB.filter(ristorante => {
-			if (tipoRicerca === 'nome') {
-				return ristorante.nome.toLowerCase().includes(testoCercato);
-			} else if (tipoRicerca === 'luogo') {
-				return ristorante.indirizzo.toLowerCase().includes(testoCercato);
+		let url = 'http://localhost:3000/api/ristoranti';
+		if (testoCercato !== "") {
+			url += `?${tipoRicerca}=${encodeURIComponent(testoCercato)}`;
+		}
+
+		try {
+			const response = await fetch(url);
+
+			const risultatiMongoDB = await response.json();
+
+			if (!response.ok) {
+				document.getElementById('griglia-ristoranti').innerHTML =
+					`<div class="alert alert-warning w-100 text-center">Errore ${response.status}.</div>`;
+				return;
 			}
-		});
 
-		document.getElementById('titolo-risultati').textContent = `Risultati per: "${testoCercato}"`;
-		mostraRistoranti(risultatiCercati);
+			if (testoCercato !== "") {
+				document.getElementById('titolo-risultati').textContent = `Risultati per: "${testoCercato}"`;
+			} else {
+				document.getElementById('titolo-risultati').textContent = "Ristoranti in Evidenza";
+			}
+
+			mostraRistoranti(risultatiMongoDB);
+		} catch (error) {
+			console.error("Errore:", error);
+			alert("Impossibile connettersi al server per la ricerca.");
+		}
 	});
 </script>
 </body>

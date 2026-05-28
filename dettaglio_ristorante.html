@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="it-IT">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Dettaglio Ristorante</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+	      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+<!--Navbar-->
+<nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm">
+	<div class="container">
+		<a class="navbar-brand fw-bold" href="homepage.html">
+			<i class="bi bi-shop"></i> FastFood App
+		</a>
+		<div class="d-flex">
+			<a href="homepage.html" class="btn btn-outline-light me-2"><i class="bi bi-arrow-left"></i> Torna ai
+				Ristoranti</a>
+		</div>
+	</div>
+</nav>
+
+<!--Contatti-->
+<div class="bg-white py-4 shadow-sm mb-4">
+	<div class="container text-center">
+		<h1 class="fw-bold" id="titoloRistorante">Caricamento...</h1>
+		<p class="text-muted mb-0"><i class="bi bi-geo-alt-fill text-danger"></i> <span id="indirizzoRistorante"></span>
+		</p>
+		<p class="text-muted"><i class="bi bi-telephone-fill text-success"></i> <span id="telefonoRistorante"></span>
+		</p>
+	</div>
+</div>
+
+<!--Ricerca piatti-->
+<div class="container mb-5">
+	<div class="row justify-content-center mb-5">
+		<div class="col-md-10">
+			<div class="card border-0 shadow-sm">
+				<div class="card-body p-4">
+					<h5 class="card-title mb-3"><i class="bi bi-search text-danger"></i> Cerca nel Menù</h5>
+					<form id="formRicercaPiatti" class="row g-2">
+						<div class="col-md-4">
+							<select class="form-select bg-light border-0" id="tipoRicerca"
+							        aria-label="Categoria di ricerca">
+								<option value="nome">Nome del Piatto</option>
+								<option value="tipologia">Tipologia (es. Dessert)</option>
+								<option value="prezzo">Prezzo Massimo (€)</option>
+							</select>
+						</div>
+						<div class="col-md-6">
+							<input type="text" class="form-control bg-light border-0" id="testoRicerca"
+							       aria-label="Testo ricerca" placeholder="Scrivi qui..." required>
+						</div>
+						<div class="col-md-2">
+							<button type="submit" class="btn btn-danger w-100">Filtra</button>
+						</div>
+					</form>
+					<div class="mt-2 text-end">
+						<button class="btn btn-sm btn-link text-secondary text-decoration-none" id="btnResetRicerca">
+							Mostra tutti i piatti
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="nessun-piatto" class="alert alert-warning d-none text-center">
+		Nessun piatto trovato con questi criteri di ricerca.
+	</div>
+
+	<div class="row g-4" id="griglia-menu"></div>
+</div>
+
+<!--Card di un piatto-->
+<template id="modello-card-piatto">
+	<div class="col-md-6 col-lg-4">
+		<div class="card h-100 shadow-sm border-0">
+			<img src="" class="card-img-top object-fit-cover foto-piatto" alt="..." style="height: 200px;">
+			<div class="card-body d-flex flex-column">
+				<div class="d-flex justify-content-between align-items-start mb-2">
+					<h5 class="card-title fw-bold nome-piatto mb-0"></h5>
+					<span class="badge bg-danger tipologia-piatto"></span>
+				</div>
+				<h5 class="text-success fw-bold mb-3 prezzo-piatto"></h5>
+				<p class="card-text small text-muted ingredienti-piatto mb-3 flex-grow-1"></p>
+
+				<div class="d-flex justify-content-between mt-auto gap-2">
+					<button class="btn btn-outline-secondary btn-sm flex-grow-1 btn-ricetta d-none">
+						<i class="bi bi-book"></i> Leggi Ricetta
+					</button>
+					<button class="btn btn-danger btn-sm flex-grow-1 btn-carrello">
+						<i class="bi bi-cart-plus"></i> Aggiungi
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
+<!--Modale ricetta-->
+<div class="modal fade" id="ricettaModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+		<div class="modal-content">
+			<div class="modal-header bg-danger text-white">
+				<h5 class="modal-title" id="titoloRicettaModal">Ricetta</h5>
+				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+			</div>
+			<div class="modal-body">
+				<p id="testoRicercaModal" class="lh-lg" style="white-space: pre-wrap;"></p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+<script>
+	let datiRistorante = null;
+
+	async function caricaDettaglioRistorante() {
+		const urlParams = new URLSearchParams(window.location.search);
+		const idRistorante = urlParams.get('id');
+
+		if (!idRistorante) {
+			alert("ID Ristorante mancante nell'URL!");
+			window.location.href = 'homepage.html';
+			return;
+		}
+
+		try {
+			const response = await fetch(`http://localhost:3000/api/ristoranti/${idRistorante}`);
+
+			if (!response.ok) {
+				alert("Ristorante non trovato.");
+				window.location.href = 'homepage.html';
+				return;
+			}
+
+			datiRistorante = await response.json();
+
+			document.getElementById('titoloRistorante').textContent = datiRistorante.nome;
+			document.getElementById('indirizzoRistorante').textContent = datiRistorante.indirizzo;
+			document.getElementById('telefonoRistorante').textContent = datiRistorante.telefono;
+
+			mostraMenu(datiRistorante.menu);
+
+		} catch (error) {
+			console.error("Errore:", error);
+			alert("Impossibile connettersi al server.");
+		}
+	}
+
+	function mostraMenu(piattiDaMostrare) {
+		const griglia = document.getElementById('griglia-menu');
+		const template = document.getElementById('modello-card-piatto');
+		const alertNessunPiatto = document.getElementById('nessun-piatto');
+		griglia.innerHTML = '';
+
+		if (piattiDaMostrare.length === 0) {
+			alertNessunPiatto.classList.remove('d-none');
+			return;
+		} else {
+			alertNessunPiatto.classList.add('d-none');
+		}
+
+		piattiDaMostrare.forEach(piatto => {
+			const clone = template.content.cloneNode(true);
+
+			clone.querySelector('.foto-piatto').src = piatto.strMealThumb;
+			clone.querySelector('.nome-piatto').textContent = piatto.strMeal;
+			clone.querySelector('.tipologia-piatto').textContent = piatto.strCategory;
+			clone.querySelector('.prezzo-piatto').textContent = `€ ${piatto.prezzo.toFixed(2)}`;
+			clone.querySelector('.ingredienti-piatto').textContent = piatto.ingredients ? piatto.ingredients.join(', ') : "Ingredienti non specificati";
+
+			// bottone ricetta visibile solo se esiste la ricetta
+			if (piatto.strInstructions && piatto.strInstructions.trim() !== "") {
+				const btnRicetta = clone.querySelector('.btn-ricetta');
+				btnRicetta.classList.remove('d-none');
+
+				btnRicetta.addEventListener('click', () => {
+					document.getElementById('titoloRicettaModal').textContent = `Ricetta: ${piatto.strMeal}`;
+					document.getElementById('testoRicercaModal').textContent = piatto.strInstructions;
+					bootstrap.Modal.getOrCreateInstance(document.getElementById('ricettaModal')).show();
+				});
+			}
+
+			// bottone aggiungi al carrello
+			clone.querySelector('.btn-carrello').addEventListener('click', () => {
+				alert(`Aggiunto al carrello (da implementare!): ${piatto.strMeal}`);
+			});
+
+			griglia.appendChild(clone);
+		});
+	}
+
+	// Ricerca piatti
+	document.getElementById('formRicercaPiatti').addEventListener('submit', (e) => {
+		e.preventDefault();
+		const tipoRicerca = document.getElementById('tipoRicerca').value;
+		const testoCercato = document.getElementById('testoRicerca').value.toLowerCase().trim();
+
+		const piattiFiltrati = datiRistorante.menu.filter(piatto => {
+			if (tipoRicerca === 'nome') {
+				return piatto.strMeal.toLowerCase().includes(testoCercato);
+			} else if (tipoRicerca === 'tipologia') {
+				return piatto.strCategory.toLowerCase().includes(testoCercato);
+			} else if (tipoRicerca === 'ingrediente') {
+				// Cerca se ALMENO UN ingrediente contiene la parola
+				return piatto.ingredients.some(ing => ing.toLowerCase().includes(testoCercato));
+			} else if (tipoRicerca === 'ricetta') {
+				// Controlla prima se la ricetta esiste, poi cerca la parola
+				return piatto.strInstructions && piatto.strInstructions.toLowerCase().includes(testoCercato);
+			} else if (tipoRicerca === 'prezzo') {
+				// Converte il testo cercato in numero e controlla se il prezzo è minore o uguale
+				const prezzoMax = parseFloat(testoCercato);
+				return !isNaN(prezzoMax) && (piatto.prezzo || 5.00) <= prezzoMax;
+			}
+			return true;
+		});
+
+		mostraMenu(piattiFiltrati);
+	});
+
+	// Reset ricerca
+	document.getElementById('btnResetRicerca').addEventListener('click', (e) => {
+		e.preventDefault();
+		document.getElementById('formRicercaPiatti').reset();
+		mostraMenu(datiRistorante.menu);
+	});
+
+	// Avvia il caricamento
+	document.addEventListener('DOMContentLoaded', caricaDettaglioRistorante);
+</script>
+</body>
+</html>
