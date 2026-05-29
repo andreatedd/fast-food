@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="it-IT">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Configura Ristorante - FastFood App</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark shadow-sm">
+	<div class="container">
+		<a class="navbar-brand fw-bold" href="#">
+			<i class="bi bi-shop"></i> FastFood App - Area Ristoratore
+		</a>
+		<button class="btn btn-outline-light btn-sm" onclick="esci()">Esci</button>
+	</div>
+</nav>
+
+<div class="container my-5">
+	<div class="row justify-content-center">
+		<div class="col-12 col-md-10 col-lg-8">
+
+			<div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+				<div class="card-header bg-danger text-white p-4 border-0 text-center">
+					<h3 class="mb-0 fw-bold">Benvenuto!</h3>
+					<p class="mb-0 opacity-75">Configura il tuo ristorante per iniziare a vendere</p>
+				</div>
+
+				<div class="card-body p-4 p-md-5">
+					<div id="alertBox" class="alert d-none text-center" role="alert"></div>
+
+					<form id="formCreaRistorante">
+						<div class="row g-3 mb-4">
+							<div class="col-md-6">
+								<label class="form-label fw-semibold">Nome Ristorante</label>
+								<input type="text" class="form-control" id="nomeRistorante"
+								       placeholder="Es. Mario's Burger" required>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label fw-semibold">Partita IVA</label>
+								<input type="text" class="form-control" id="partitaIva" placeholder="11 cifre numeriche"
+								       pattern="[0-9]{11}" required>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label fw-semibold">Telefono</label>
+								<input type="tel" class="form-control" id="telefono" placeholder="Es. 02 1234567"
+								       required>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label fw-semibold">Email di Contatto</label>
+								<input type="email" class="form-control" id="emailRistorante"
+								       placeholder="info@tuolocale.it" required>
+							</div>
+							<div class="col-12">
+								<label class="form-label fw-semibold">Indirizzo Fisico</label>
+								<input type="text" class="form-control" id="indirizzoRistorante"
+								       placeholder="Via Roma 1, Milano" required>
+							</div>
+						</div>
+
+						<button type="submit" class="btn btn-danger w-100 py-3 fw-bold fs-5 shadow-sm">
+							<i class="bi bi-check-circle me-2"></i> Salva e vai alla Dashboard
+						</button>
+					</form>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+	// 1. CONTROLLO DI SICUREZZA INIZIALE
+	// Appena si apre la pagina, controlliamo se l'utente ha il token in tasca.
+	const token = localStorage.getItem('token');
+
+	if (!token) {
+		// Se non ha il token, è un intruso! Lo rispediamo al login.
+		window.location.href = 'auth.html';
+	}
+
+	// Funzione utility per i messaggi
+	function mostraMessaggio(messaggio, tipo) {
+		const alertBox = document.getElementById('alertBox');
+		alertBox.className = `alert alert-${tipo} text-center`;
+		alertBox.textContent = messaggio;
+		alertBox.classList.remove('d-none');
+	}
+
+	// Funzione di Logout (cancella il token e torna al login)
+	function esci() {
+		localStorage.removeItem('token');
+		localStorage.removeItem('ruolo');
+		window.location.href = 'auth.html';
+	}
+
+	// 2. SALVATAGGIO DEI DATI (La magia del Token)
+	document.getElementById('formCreaRistorante').addEventListener('submit', async function (event) {
+		event.preventDefault();
+
+		const datiRistorante = {
+			nome: document.getElementById('nomeRistorante').value.trim(),
+			partitaIva: document.getElementById('partitaIva').value.trim(),
+			telefono: document.getElementById('telefono').value.trim(),
+			email: document.getElementById('emailRistorante').value.trim(),
+			indirizzo: document.getElementById('indirizzoRistorante').value.trim()
+		};
+
+		try {
+			const response = await fetch('http://localhost:3000/api/ristoratore/me', {
+				method: 'PUT', // Usiamo PUT perché nel backend fa "upsert" (crea se non esiste, aggiorna se esiste)
+				headers: {
+					'Content-Type': 'application/json',
+					// ECCO LA CHIAVE! Aggiungiamo il token agli headers della richiesta
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify(datiRistorante)
+			});
+
+			const risultato = await response.json();
+
+			if (!response.ok) {
+				mostraMessaggio("Errore: " + (risultato.message || "Dati non validi"), "danger");
+				return;
+			}
+
+			mostraMessaggio("Profilo creato con successo! Ti stiamo portando alla Dashboard...", "success");
+
+			// Reindirizzamento alla dashboard operativa (che creeremo al prossimo step)
+			setTimeout(() => {
+				window.location.href = 'dashboard.html';
+			}, 1500);
+
+		} catch (error) {
+			mostraMessaggio("Errore di connessione al server.", "danger");
+		}
+	});
+</script>
+</body>
+</html>

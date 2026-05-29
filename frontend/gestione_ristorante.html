@@ -372,7 +372,7 @@
 				alert("Errore nel caricamento del catalogo dal server.");
 				return;
 			}
-			const catalogoPiatti = await response.json(); // Ecco l'array vero!
+			const catalogoPiatti = await response.json();
 
 			const listaCatalogo = document.getElementById('lista-catalogo');
 			const template = document.getElementById('modello-elemento-catalogo');

@@ -57,11 +57,11 @@
 						<div class="tab-pane fade show active" id="login" role="tabpanel">
 							<form id="formLogin">
 								<div class="mb-3">
-									<label class="form-label">Email</label>
+									<label class="form-label" for="loginEmail">Email</label>
 									<input type="email" class="form-control" id="loginEmail" required>
 								</div>
 								<div class="mb-4">
-									<label class="form-label">Password</label>
+									<label class="form-label" for="loginPassword">Password</label>
 									<input type="password" class="form-control" id="loginPassword" required>
 								</div>
 								<button type="submit" class="btn btn-danger w-100 py-2 fw-bold">Entra</button>
@@ -72,25 +72,25 @@
 							<form id="formRegistrazione">
 								<div class="row g-2 mb-3">
 									<div class="col-6">
-										<label class="form-label">Nome</label>
+										<label class="form-label" for="regNome">Nome</label>
 										<input type="text" class="form-control" id="regNome" required>
 									</div>
 									<div class="col-6">
-										<label class="form-label">Cognome</label>
+										<label class="form-label" for="regCognome">Cognome</label>
 										<input type="text" class="form-control" id="regCognome" required>
 									</div>
 								</div>
 								<div class="mb-3">
-									<label class="form-label">Email</label>
+									<label class="form-label" for="regEmail">Email</label>
 									<input type="email" class="form-control" id="regEmail" required>
 								</div>
 								<div class="mb-3">
-									<label class="form-label">Password</label>
+									<label class="form-label" for="regPassword">Password</label>
 									<input type="password" class="form-control" id="regPassword" required>
 								</div>
 
 								<div class="mb-3 border-top pt-3">
-									<label class="form-label fw-bold">Cosa vuoi fare?</label>
+									<label class="form-label fw-bold" for="regRuolo">Cosa vuoi fare?</label>
 									<select class="form-select" id="regRuolo">
 										<option value="cliente" selected>Voglio ordinare cibo (Cliente)</option>
 										<option value="ristoratore">Voglio gestire un locale (Ristoratore)</option>
@@ -102,7 +102,8 @@
 										tua
 										esperienza (Opzionale)</p>
 
-									<label class="form-label small">Metodo di Pagamento preferito</label>
+									<label class="form-label small" for="regPagamento">Metodo di Pagamento
+										preferito</label>
 									<select class="form-select form-select-sm mb-3" id="regPagamento">
 										<option value="nessuno">Sceglierò in seguito</option>
 										<option value="carta_di_credito">Carta di Credito</option>
@@ -113,16 +114,17 @@
 									<label class="form-label small mb-1">Cosa ti piace mangiare?</label><br>
 									<div class="form-check form-check-inline">
 										<input class="form-check-input preferenza-check" type="checkbox"
-										       value="Hamburger">
+										       value="Hamburger" aria-label="preferenza hamburger">
 										<label class="form-check-label small">Hamburger</label>
 									</div>
 									<div class="form-check form-check-inline">
-										<input class="form-check-input preferenza-check" type="checkbox" value="Pizza">
+										<input class="form-check-input preferenza-check" type="checkbox" value="Pizza"
+										       aria-label="preferenza pizza">
 										<label class="form-check-label small">Pizza</label>
 									</div>
 									<div class="form-check form-check-inline">
 										<input class="form-check-input preferenza-check" type="checkbox"
-										       value="Dessert">
+										       value="Dessert" aria-label="preferenza dessert">
 										<label class="form-check-label small">Dessert</label>
 									</div>
 								</div>
@@ -136,10 +138,12 @@
 		</div>
 	</div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
 
 <script>
-	// 1. GESTIONE INTERFACCIA: Mostra/Nascondi i campi del cliente in base al ruolo
+	// mostra/nascondi campi dedicati al cliente
 	document.getElementById('regRuolo').addEventListener('change', function (e) {
 		const campiCliente = document.getElementById('campiCliente');
 		if (e.target.value === 'cliente') {
@@ -152,16 +156,22 @@
 	// Funzione per mostrare messaggi di errore o successo
 	function mostraMessaggio(messaggio, tipo) {
 		const alertBox = document.getElementById('alertBox');
-		alertBox.className = `alert alert-${tipo} text-center`; // es. alert-danger o alert-success
+		alertBox.className = `alert alert-${tipo} text-center`;
 		alertBox.textContent = messaggio;
 		alertBox.classList.remove('d-none');
 	}
 
-	// 2. LOGICA DI REGISTRAZIONE
+	// Rimuovi alert al cambio tab
+	document.getElementById('authTabs').addEventListener('show.bs.tab', function () {
+		const alertBox = document.getElementById('alertBox');
+		alertBox.classList.add('d-none');
+		alertBox.textContent = '';
+	});
+
+	// Registrazione
 	document.getElementById('formRegistrazione').addEventListener('submit', async (e) => {
 		e.preventDefault();
 
-		// Raccogliamo le preferenze selezionate (checkbox)
 		const preferenzeSelezionate = Array.from(document.querySelectorAll('.preferenza-check:checked')).map(cb => cb.value);
 
 		const datiRegistrazione = {
@@ -189,19 +199,19 @@
 				return;
 			}
 
-			// Registrazione ok!
 			mostraMessaggio("Registrazione completata! Ora puoi fare il login.", "success");
 			document.getElementById('formRegistrazione').reset();
 
-			// Cambiamo automaticamente tab spostando l'utente sul Login
-			bootstrap.Tab.getOrCreateInstance(document.getElementById('login-tab')).show();
-
+			// sposta su login
+			setTimeout(() => {
+				bootstrap.Tab.getOrCreateInstance(document.getElementById('login-tab')).show();
+			}, 1750);
 		} catch (error) {
 			mostraMessaggio("Impossibile connettersi al server.", "danger");
 		}
 	});
 
-	// 3. LOGICA DI LOGIN (IL CUORE DEL SISTEMA!)
+	// Login
 	document.getElementById('formLogin').addEventListener('submit', async (e) => {
 		e.preventDefault();
 
@@ -222,16 +232,16 @@
 				return;
 			}
 
-			// Salviamo il token e il ruolo nel "portafoglio" del browser
+			// salva token login e ruolo
 			localStorage.setItem('token', data.token);
 			localStorage.setItem('ruolo', data.ruolo);
 
 			mostraMessaggio("Login effettuato! Reindirizzamento in corso...", "success");
 
-			// Reindirizzamento intelligente in base al ruolo
+			// Reindirizzamento
 			setTimeout(() => {
 				if (data.ruolo === 'ristoratore') {
-					window.location.href = 'gestione_ristorante.html'; // Oppure il nome della tua pagina privata
+					window.location.href = 'dashboard.html';
 				} else {
 					window.location.href = 'homepage.html';
 				}
