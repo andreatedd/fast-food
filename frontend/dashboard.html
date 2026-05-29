@@ -9,6 +9,10 @@
 </head>
 <body>
 
+
+<!--TODO: CONTROLLARE TUTTO-->
+
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
 	<div class="container-fluid">
 		<a class="navbar-brand fw-bold" href="#">
@@ -157,9 +161,12 @@
 <script>
 	let menuRistorante = [];
 
-	// 1. IL BUTTAFUORI FRONTEND
+	// Controllo autenticazione
 	const token = localStorage.getItem('token');
-	if (!token) window.location.href = 'auth.html';
+	const ruolo = localStorage.getItem('ruolo');
+	if (!token || ruolo !== 'ristoratore') {
+		window.location.href = 'auth.html';
+	}
 
 	function esci() {
 		localStorage.removeItem('token');
@@ -167,22 +174,20 @@
 		window.location.href = 'auth.html';
 	}
 
-	// 2. IL CERVELLO DELLA PAGINA (Si attiva all'avvio)
+	// Caricamento dati
 	document.addEventListener('DOMContentLoaded', async () => {
 		try {
-			// 👉 NOTA BENE: Inseriamo il Token nell'Header per farci riconoscere dal Server!
 			const response = await fetch('http://localhost:3000/api/ristoratore/me', {
 				headers: {'Authorization': `Bearer ${token}`}
 			});
 			const dati = await response.json();
 
-			// IL REDIRECT INTELLIGENTE: Il ristorante non esiste ancora?
+			// Se il ristoratore è nuovo, lo reindirizziamo alla pagina di creazione
 			if (dati.nuovo) {
 				window.location.href = 'crea_ristorante.html';
 				return;
 			}
 
-			// Se esiste, popoliamo la Dashboard
 			document.getElementById('nomeRistoranteNav').textContent = dati.nome;
 			menuRistorante = dati.menu || [];
 			aggiornaGrigliaMenu();
@@ -191,8 +196,6 @@
 			alert("Errore critico di connessione al server.");
 		}
 	});
-
-	// --- FUNZIONI DI GESTIONE MENU (Adattate dal tuo codice) ---
 
 	function aggiornaGrigliaMenu() {
 		const contenitore = document.getElementById('contenitore-piatti');
@@ -211,7 +214,7 @@
 			clone.querySelector('.foto-piatto').src = piatto.strMealThumb;
 			clone.querySelector('.nome-piatto').textContent = piatto.strMeal;
 			clone.querySelector('.tipologia-piatto').textContent = piatto.strCategory;
-			let prezzo = piatto.prezzo || 5.00;
+			let prezzo = piatto.prezzo;
 			clone.querySelector('.prezzo-piatto').textContent = `€ ${prezzo.toFixed(2)}`;
 			clone.querySelector('.ingredienti-piatto').textContent = piatto.ingredients.join(', ');
 
@@ -224,14 +227,14 @@
 		});
 	}
 
-	// SALVATAGGIO DEFINITIVO NEL DATABASE
+	// Salva menu nel database
 	document.getElementById('btnSalvaMenu').addEventListener('click', async () => {
 		try {
 			const response = await fetch('http://localhost:3000/api/ristoratore/me/menu', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${token}` // 👈 CHIAVE INSERITA QUI
+					'Authorization': `Bearer ${token}`
 				},
 				body: JSON.stringify(menuRistorante)
 			});
@@ -246,7 +249,6 @@
 		}
 	});
 
-	// POPOLA IL CATALOGO GLOBALE
 	async function popolaModaleCatalogo() {
 		try {
 			const response = await fetch('http://localhost:3000/api/catalogo');
@@ -305,6 +307,7 @@
 		bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPiatto')).show();
 	}
 
+	// Salvataggio piatto in js
 	document.getElementById('formPiatto').addEventListener('submit', function (event) {
 		event.preventDefault();
 		const index = parseInt(document.getElementById('piattoIndice').value);

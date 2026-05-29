@@ -3,18 +3,20 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Configura Ristorante - FastFood App</title>
+	<title>Impostazioni Ristorante - FastFood App</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
-<body>
+<body class="bg-light">
 
 <nav class="navbar navbar-dark bg-dark shadow-sm">
 	<div class="container">
 		<a class="navbar-brand fw-bold" href="#">
 			<i class="bi bi-shop"></i> FastFood App - Area Ristoratore
 		</a>
-		<button class="btn btn-outline-light btn-sm" onclick="esci()">Esci</button>
+		<button class="btn btn-outline-light btn-me" onclick="esci()"><i
+				class="bi bi-box-arrow-right me-2"></i>Esci
+		</button>
 	</div>
 </nav>
 
@@ -24,8 +26,9 @@
 
 			<div class="card shadow-lg border-0 rounded-4 overflow-hidden">
 				<div class="card-header bg-danger text-white p-4 border-0 text-center">
-					<h3 class="mb-0 fw-bold">Benvenuto!</h3>
-					<p class="mb-0 opacity-75">Configura il tuo ristorante per iniziare a vendere</p>
+					<h3 id="formTitolo" class="mb-0 fw-bold">Benvenuto!</h3>
+					<p id="formSottotitolo" class="mb-0 opacity-75">Configura il tuo ristorante per iniziare a
+						vendere</p>
 				</div>
 
 				<div class="card-body p-4 p-md-5">
@@ -34,35 +37,43 @@
 					<form id="formCreaRistorante">
 						<div class="row g-3 mb-4">
 							<div class="col-md-6">
-								<label class="form-label fw-semibold">Nome Ristorante</label>
-								<input type="text" class="form-control" id="nomeRistorante"
+								<label class="form-label fw-semibold" for="nomeRistorante">Nome Ristorante</label>
+								<input type="text" class="form-control bg-light" id="nomeRistorante"
 								       placeholder="Es. Mario's Burger" required>
 							</div>
 							<div class="col-md-6">
-								<label class="form-label fw-semibold">Partita IVA</label>
-								<input type="text" class="form-control" id="partitaIva" placeholder="11 cifre numeriche"
-								       pattern="[0-9]{11}" required>
+								<label class="form-label fw-semibold" for="partitaIva">Partita IVA</label>
+								<input type="text" class="form-control bg-light" id="partitaIva"
+								       placeholder="11 cifre numeriche" pattern="[0-9]{11}" required>
 							</div>
 							<div class="col-md-6">
-								<label class="form-label fw-semibold">Telefono</label>
-								<input type="tel" class="form-control" id="telefono" placeholder="Es. 02 1234567"
-								       required>
+								<label class="form-label fw-semibold" for="telefono">Telefono</label>
+								<input type="tel" class="form-control bg-light" id="telefono"
+								       placeholder="Es. 02 1234567" required>
 							</div>
 							<div class="col-md-6">
-								<label class="form-label fw-semibold">Email di Contatto</label>
-								<input type="email" class="form-control" id="emailRistorante"
+								<label class="form-label fw-semibold" for="emailRistorante">Email di Contatto</label>
+								<input type="email" class="form-control bg-light" id="emailRistorante"
 								       placeholder="info@tuolocale.it" required>
 							</div>
 							<div class="col-12">
-								<label class="form-label fw-semibold">Indirizzo Fisico</label>
-								<input type="text" class="form-control" id="indirizzoRistorante"
+								<label class="form-label fw-semibold" for="indirizzoRistorante">Indirizzo Fisico</label>
+								<input type="text" class="form-control bg-light" id="indirizzoRistorante"
 								       placeholder="Via Roma 1, Milano" required>
 							</div>
 						</div>
 
-						<button type="submit" class="btn btn-danger w-100 py-3 fw-bold fs-5 shadow-sm">
-							<i class="bi bi-check-circle me-2"></i> Salva e vai alla Dashboard
-						</button>
+						<div class="d-flex gap-3 mt-2">
+							<a href="dashboard.html" id="btnAnnulla"
+							   class="btn btn-outline-secondary w-50 py-3 fw-bold fs-5 d-none">
+								<i class="bi bi-arrow-left me-2"></i> Annulla
+							</a>
+
+							<button type="submit" id="btnSalva"
+							        class="btn btn-danger w-100 py-3 fw-bold fs-5 shadow-sm">
+								<i class="bi bi-check-circle me-2"></i> <span id="testoBtnSalva">Salva e vai alla Dashboard</span>
+							</button>
+						</div>
 					</form>
 				</div>
 			</div>
@@ -74,16 +85,13 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-	// 1. CONTROLLO DI SICUREZZA INIZIALE
-	// Appena si apre la pagina, controlliamo se l'utente ha il token in tasca.
+	// Controllo autenticazione
 	const token = localStorage.getItem('token');
-
-	if (!token) {
-		// Se non ha il token, è un intruso! Lo rispediamo al login.
+	const ruolo = localStorage.getItem('ruolo');
+	if (!token || ruolo !== 'ristoratore') {
 		window.location.href = 'auth.html';
 	}
 
-	// Funzione utility per i messaggi
 	function mostraMessaggio(messaggio, tipo) {
 		const alertBox = document.getElementById('alertBox');
 		alertBox.className = `alert alert-${tipo} text-center`;
@@ -91,14 +99,42 @@
 		alertBox.classList.remove('d-none');
 	}
 
-	// Funzione di Logout (cancella il token e torna al login)
 	function esci() {
 		localStorage.removeItem('token');
 		localStorage.removeItem('ruolo');
 		window.location.href = 'auth.html';
 	}
 
-	// 2. SALVATAGGIO DEI DATI (La magia del Token)
+	// Controllo creazione o modifica
+	document.addEventListener('DOMContentLoaded', async () => {
+		try {
+			const response = await fetch('http://localhost:3000/api/ristoratore/me', {
+				headers: {'Authorization': `Bearer ${token}`}
+			});
+			const dati = await response.json();
+
+			// Modifica
+			if (!dati.nuovo) {
+				document.getElementById('formTitolo').textContent = "Impostazioni Locale";
+				document.getElementById('formSottotitolo').textContent = "Aggiorna le informazioni del tuo ristorante";
+
+				document.getElementById('nomeRistorante').value = dati.nome;
+				document.getElementById('partitaIva').value = dati.partitaIva;
+				document.getElementById('telefono').value = dati.telefono;
+				document.getElementById('emailRistorante').value = dati.email;
+				document.getElementById('indirizzoRistorante').value = dati.indirizzo;
+
+				document.getElementById('btnAnnulla').classList.remove('d-none');
+				document.getElementById('btnSalva').classList.remove('w-100');
+				document.getElementById('btnSalva').classList.add('w-50');
+				document.getElementById('testoBtnSalva').textContent = "Applica Modifiche";
+			}
+		} catch (error) {
+			console.error("Errore di connessione", error);
+		}
+	});
+
+	// Creazione o aggiornamento ristorante
 	document.getElementById('formCreaRistorante').addEventListener('submit', async function (event) {
 		event.preventDefault();
 
@@ -112,10 +148,9 @@
 
 		try {
 			const response = await fetch('http://localhost:3000/api/ristoratore/me', {
-				method: 'PUT', // Usiamo PUT perché nel backend fa "upsert" (crea se non esiste, aggiorna se esiste)
+				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
-					// ECCO LA CHIAVE! Aggiungiamo il token agli headers della richiesta
 					'Authorization': `Bearer ${token}`
 				},
 				body: JSON.stringify(datiRistorante)
@@ -128,12 +163,11 @@
 				return;
 			}
 
-			mostraMessaggio("Profilo creato con successo! Ti stiamo portando alla Dashboard...", "success");
+			mostraMessaggio("Modifiche salvate con successo! Reindirizzamento...", "success");
 
-			// Reindirizzamento alla dashboard operativa (che creeremo al prossimo step)
 			setTimeout(() => {
 				window.location.href = 'dashboard.html';
-			}, 1500);
+			}, 700);
 
 		} catch (error) {
 			mostraMessaggio("Errore di connessione al server.", "danger");
