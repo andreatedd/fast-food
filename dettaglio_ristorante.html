@@ -121,20 +121,20 @@
         crossorigin="anonymous"></script>
 
 <script>
-	let datiRistorante = null;
+	let idRistoranteCorrente = null;
 
 	async function caricaDettaglioRistorante() {
 		const urlParams = new URLSearchParams(window.location.search);
-		const idRistorante = urlParams.get('id');
+		idRistoranteCorrente = urlParams.get('id');
 
-		if (!idRistorante) {
+		if (!idRistoranteCorrente) {
 			alert("ID Ristorante mancante nell'URL!");
 			window.location.href = 'homepage.html';
 			return;
 		}
 
 		try {
-			const response = await fetch(`http://localhost:3000/api/ristoranti/${idRistorante}`);
+			const response = await fetch(`http://localhost:3000/api/ristoranti/${idRistoranteCorrente}`);
 
 			if (!response.ok) {
 				alert("Ristorante non trovato.");
@@ -142,18 +142,50 @@
 				return;
 			}
 
-			datiRistorante = await response.json();
+			const ristorante = await response.json();
 
-			document.getElementById('titoloRistorante').textContent = datiRistorante.nome;
-			document.getElementById('indirizzoRistorante').textContent = datiRistorante.indirizzo;
-			document.getElementById('telefonoRistorante').textContent = datiRistorante.telefono;
+			document.getElementById('titoloRistorante').textContent = ristorante.nome;
+			document.getElementById('indirizzoRistorante').textContent = ristorante.indirizzo;
+			document.getElementById('telefonoRistorante').textContent = ristorante.telefono;
 
-			mostraMenu(datiRistorante.menu);
-
+			await caricaPiatti();
 		} catch (error) {
 			console.error("Errore:", error);
-			alert("Impossibile connettersi al server.");
 		}
+	}
+
+	// Carica i piatti (con o senza filtri)
+	async function caricaPiatti(tipo = "", testo = "") {
+		let url = `http://localhost:3000/api/ristoranti/${idRistoranteCorrente}/piatti`;
+
+		if (tipo && testo) {
+			url += `?tipo=${tipo}&testo=${encodeURIComponent(testo)}`;
+		}
+
+		try {
+			const response = await fetch(url);
+			if (!response.ok) {
+				mostraErrore(response.message || "Impossibile caricare i piatti.");
+				return;
+			}
+			const piatti = await response.json();
+			mostraMenu(piatti);
+		} catch (error) {
+			console.error(error);
+			mostraErrore(error);
+		}
+	}
+
+	function mostraErrore(messaggio) {
+		document.getElementById('griglia-menu').innerHTML = `
+			<div class="col-12">
+				<div class="alert alert-danger text-center shadow-sm" role="alert">
+					<i class="bi bi-exclamation-triangle-fill fs-4 d-block mb-2"></i>
+					<strong>Ops! Si è verificato un problema:</strong><br>
+					${messaggio}<br>
+				</div>
+			</div>
+		`;
 	}
 
 	function mostraMenu(piattiDaMostrare) {
@@ -178,7 +210,6 @@
 			clone.querySelector('.prezzo-piatto').textContent = `€ ${piatto.prezzo.toFixed(2)}`;
 			clone.querySelector('.ingredienti-piatto').textContent = piatto.ingredients ? piatto.ingredients.join(', ') : "Ingredienti non specificati";
 
-			// bottone ricetta visibile solo se esiste la ricetta
 			if (piatto.strInstructions && piatto.strInstructions.trim() !== "") {
 				const btnRicetta = clone.querySelector('.btn-ricetta');
 				btnRicetta.classList.remove('d-none');
@@ -190,7 +221,6 @@
 				});
 			}
 
-			// bottone aggiungi al carrello
 			clone.querySelector('.btn-carrello').addEventListener('click', () => {
 				alert(`Aggiunto al carrello (da implementare!): ${piatto.strMeal}`);
 			});
@@ -199,42 +229,23 @@
 		});
 	}
 
-	// Ricerca piatti
-	document.getElementById('formRicercaPiatti').addEventListener('submit', (e) => {
+	// Evento ricerca
+	document.getElementById('formRicercaPiatti').addEventListener('submit', async (e) => {
 		e.preventDefault();
 		const tipoRicerca = document.getElementById('tipoRicerca').value;
-		const testoCercato = document.getElementById('testoRicerca').value.toLowerCase().trim();
+		const testoCercato = document.getElementById('testoRicerca').value.trim();
 
-		const piattiFiltrati = datiRistorante.menu.filter(piatto => {
-			if (tipoRicerca === 'nome') {
-				return piatto.strMeal.toLowerCase().includes(testoCercato);
-			} else if (tipoRicerca === 'tipologia') {
-				return piatto.strCategory.toLowerCase().includes(testoCercato);
-			} else if (tipoRicerca === 'ingrediente') {
-				// Cerca se ALMENO UN ingrediente contiene la parola
-				return piatto.ingredients.some(ing => ing.toLowerCase().includes(testoCercato));
-			} else if (tipoRicerca === 'ricetta') {
-				// Controlla prima se la ricetta esiste, poi cerca la parola
-				return piatto.strInstructions && piatto.strInstructions.toLowerCase().includes(testoCercato);
-			} else if (tipoRicerca === 'prezzo') {
-				// Converte il testo cercato in numero e controlla se il prezzo è minore o uguale
-				const prezzoMax = parseFloat(testoCercato);
-				return !isNaN(prezzoMax) && (piatto.prezzo || 5.00) <= prezzoMax;
-			}
-			return true;
-		});
-
-		mostraMenu(piattiFiltrati);
+		await caricaPiatti(tipoRicerca, testoCercato);
 	});
 
 	// Reset ricerca
-	document.getElementById('btnResetRicerca').addEventListener('click', (e) => {
+	document.getElementById('btnResetRicerca').addEventListener('click', async (e) => {
 		e.preventDefault();
 		document.getElementById('formRicercaPiatti').reset();
-		mostraMenu(datiRistorante.menu);
+		await caricaPiatti();
 	});
 
-	// Avvia il caricamento
+	// caricamento iniziale
 	document.addEventListener('DOMContentLoaded', caricaDettaglioRistorante);
 </script>
 </body>
