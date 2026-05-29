@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="it-IT">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Accedi o Registrati</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+	      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+	<style>
+        .nav-pills .nav-link.active {
+            background-color: #dc3545;
+        }
+
+        .nav-pills .nav-link {
+            color: #dc3545;
+            font-weight: 500;
+        }
+	</style>
+</head>
+<body>
+
+<!--Navbar-->
+<nav class="navbar navbar-dark bg-danger shadow-sm">
+	<div class="container justify-content-center">
+		<a class="navbar-brand fw-bold fs-3" href="homepage.html">
+			<i class="bi bi-shop"></i> FastFood App
+		</a>
+	</div>
+</nav>
+
+<div class="container my-5">
+	<div class="row justify-content-center">
+		<div class="col-12 col-md-8 col-lg-5">
+			<!--Card autenticazione-->
+			<div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+				<div class="card-header bg-white p-4 pb-0 border-0">
+					<ul class="nav nav-pills nav-justified mb-3" id="authTabs" role="tablist">
+						<li class="nav-item" role="presentation">
+							<button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login"
+							        type="button" role="tab">Accedi
+							</button>
+						</li>
+						<li class="nav-item" role="presentation">
+							<button class="nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register"
+							        type="button" role="tab">Registrati
+							</button>
+						</li>
+					</ul>
+				</div>
+
+				<div class="card-body p-4 pt-0">
+					<div id="alertBox" class="alert d-none text-center" role="alert"></div>
+
+					<div class="tab-content" id="authTabsContent">
+
+						<div class="tab-pane fade show active" id="login" role="tabpanel">
+							<form id="formLogin">
+								<div class="mb-3">
+									<label class="form-label">Email</label>
+									<input type="email" class="form-control" id="loginEmail" required>
+								</div>
+								<div class="mb-4">
+									<label class="form-label">Password</label>
+									<input type="password" class="form-control" id="loginPassword" required>
+								</div>
+								<button type="submit" class="btn btn-danger w-100 py-2 fw-bold">Entra</button>
+							</form>
+						</div>
+
+						<div class="tab-pane fade" id="register" role="tabpanel">
+							<form id="formRegistrazione">
+								<div class="row g-2 mb-3">
+									<div class="col-6">
+										<label class="form-label">Nome</label>
+										<input type="text" class="form-control" id="regNome" required>
+									</div>
+									<div class="col-6">
+										<label class="form-label">Cognome</label>
+										<input type="text" class="form-control" id="regCognome" required>
+									</div>
+								</div>
+								<div class="mb-3">
+									<label class="form-label">Email</label>
+									<input type="email" class="form-control" id="regEmail" required>
+								</div>
+								<div class="mb-3">
+									<label class="form-label">Password</label>
+									<input type="password" class="form-control" id="regPassword" required>
+								</div>
+
+								<div class="mb-3 border-top pt-3">
+									<label class="form-label fw-bold">Cosa vuoi fare?</label>
+									<select class="form-select" id="regRuolo">
+										<option value="cliente" selected>Voglio ordinare cibo (Cliente)</option>
+										<option value="ristoratore">Voglio gestire un locale (Ristoratore)</option>
+									</select>
+								</div>
+
+								<div id="campiCliente" class="bg-light p-3 rounded mb-4">
+									<p class="small text-muted mb-2"><i class="bi bi-info-circle"></i> Personalizza la
+										tua
+										esperienza (Opzionale)</p>
+
+									<label class="form-label small">Metodo di Pagamento preferito</label>
+									<select class="form-select form-select-sm mb-3" id="regPagamento">
+										<option value="nessuno">Sceglierò in seguito</option>
+										<option value="carta_di_credito">Carta di Credito</option>
+										<option value="carta_prepagata">Carta Prepagata</option>
+										<option value="alla_consegna">Contanti alla Consegna</option>
+									</select>
+
+									<label class="form-label small mb-1">Cosa ti piace mangiare?</label><br>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input preferenza-check" type="checkbox"
+										       value="Hamburger">
+										<label class="form-check-label small">Hamburger</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input preferenza-check" type="checkbox" value="Pizza">
+										<label class="form-check-label small">Pizza</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input preferenza-check" type="checkbox"
+										       value="Dessert">
+										<label class="form-check-label small">Dessert</label>
+									</div>
+								</div>
+
+								<button type="submit" class="btn btn-danger w-100 py-2 fw-bold">Crea Account</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+	// 1. GESTIONE INTERFACCIA: Mostra/Nascondi i campi del cliente in base al ruolo
+	document.getElementById('regRuolo').addEventListener('change', function (e) {
+		const campiCliente = document.getElementById('campiCliente');
+		if (e.target.value === 'cliente') {
+			campiCliente.classList.remove('d-none');
+		} else {
+			campiCliente.classList.add('d-none');
+		}
+	});
+
+	// Funzione per mostrare messaggi di errore o successo
+	function mostraMessaggio(messaggio, tipo) {
+		const alertBox = document.getElementById('alertBox');
+		alertBox.className = `alert alert-${tipo} text-center`; // es. alert-danger o alert-success
+		alertBox.textContent = messaggio;
+		alertBox.classList.remove('d-none');
+	}
+
+	// 2. LOGICA DI REGISTRAZIONE
+	document.getElementById('formRegistrazione').addEventListener('submit', async (e) => {
+		e.preventDefault();
+
+		// Raccogliamo le preferenze selezionate (checkbox)
+		const preferenzeSelezionate = Array.from(document.querySelectorAll('.preferenza-check:checked')).map(cb => cb.value);
+
+		const datiRegistrazione = {
+			nome: document.getElementById('regNome').value.trim(),
+			cognome: document.getElementById('regCognome').value.trim(),
+			email: document.getElementById('regEmail').value.trim(),
+			password: document.getElementById('regPassword').value,
+			ruolo: document.getElementById('regRuolo').value,
+			// Inviamo i campi cliente solo se il ruolo è cliente
+			metodoPagamento: document.getElementById('regRuolo').value === 'cliente' ? document.getElementById('regPagamento').value : 'nessuno',
+			preferenze: document.getElementById('regRuolo').value === 'cliente' ? preferenzeSelezionate : []
+		};
+
+		try {
+			const response = await fetch('http://localhost:3000/api/auth/signup', {
+				method: 'POST',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify(datiRegistrazione)
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				mostraMessaggio(data.message || "Errore durante la registrazione.", "danger");
+				return;
+			}
+
+			// Registrazione ok!
+			mostraMessaggio("Registrazione completata! Ora puoi fare il login.", "success");
+			document.getElementById('formRegistrazione').reset();
+
+			// Cambiamo automaticamente tab spostando l'utente sul Login
+			bootstrap.Tab.getOrCreateInstance(document.getElementById('login-tab')).show();
+
+		} catch (error) {
+			mostraMessaggio("Impossibile connettersi al server.", "danger");
+		}
+	});
+
+	// 3. LOGICA DI LOGIN (IL CUORE DEL SISTEMA!)
+	document.getElementById('formLogin').addEventListener('submit', async (e) => {
+		e.preventDefault();
+
+		const email = document.getElementById('loginEmail').value.trim();
+		const password = document.getElementById('loginPassword').value;
+
+		try {
+			const response = await fetch('http://localhost:3000/api/auth/login', {
+				method: 'POST',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify({email, password})
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				mostraMessaggio(data.message || "Credenziali non valide.", "danger");
+				return;
+			}
+
+			// Salviamo il token e il ruolo nel "portafoglio" del browser
+			localStorage.setItem('token', data.token);
+			localStorage.setItem('ruolo', data.ruolo);
+
+			mostraMessaggio("Login effettuato! Reindirizzamento in corso...", "success");
+
+			// Reindirizzamento intelligente in base al ruolo
+			setTimeout(() => {
+				if (data.ruolo === 'ristoratore') {
+					window.location.href = 'gestione_ristorante.html'; // Oppure il nome della tua pagina privata
+				} else {
+					window.location.href = 'homepage.html';
+				}
+			}, 1000);
+
+		} catch (error) {
+			mostraMessaggio("Impossibile connettersi al server.", "danger");
+		}
+	});
+</script>
+</body>
+</html>
