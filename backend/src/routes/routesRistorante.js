@@ -1,23 +1,19 @@
 import express from "express";
 import schemaRistorante from "../models/ristorante.js";
+import {verificaToken, soloRistoratori} from "../middlewares/auth.js";
 
 const router = express.Router();
+
+router.use(verificaToken, soloRistoratori);
 
 // GET profilo e menù
 router.get("/me", async (req, res, next) => {
 	try {
-		// Simuliamo l'utente loggato prendendo il primo ristorante nel DB
-		let ristorante = await schemaRistorante.findOne();
-
-		// Ristorante fittizio
+		let ristorante = await schemaRistorante.findOne({proprietario: req.utenteLoggato.idUtente});
 		if (!ristorante) {
-			ristorante = await schemaRistorante.create({
-				nome: "Il Mio FastFood",
-				partitaIva: "12345678901",
-				telefono: "02 1234567",
-				email: "admin@fastfood.it",
-				indirizzo: "Via Roma 1, Milano",
-				menu: []
+			return res.json({
+				nuovo: true,
+				message: "Devi ancora creare il profilo del tuo ristorante."
 			});
 		}
 		res.json(ristorante);
@@ -26,15 +22,19 @@ router.get("/me", async (req, res, next) => {
 	}
 });
 
-// PUT aggiorna informazioni ristorante (es. nome, indirizzo, telefono, email)
+// PUT aggiorna o salva informazioni ristorante
 router.put("/me", async (req, res, next) => {
 	try {
-		const ristorante = await schemaRistorante.findOne();
+		const datiDaSalvare = {...req.body, proprietario: req.utenteLoggato.idUtente};
 
-		const updated = await schemaRistorante.findByIdAndUpdate(
-			ristorante._id,
-			{$set: req.body}, // aggiorna solo le info nel form html
-			{returnDocument: 'after', runValidators: true} // after restituisce oggetto dopo la modifica, runValidators assicura che le validazioni vengano fatte anche in update
+		const updated = await schemaRistorante.findOneAndUpdate(
+			{proprietario: req.utenteLoggato.idUtente},
+			{$set: datiDaSalvare},
+			{
+				returnDocument: 'after',
+				runValidators: true,
+				upsert: true
+			}
 		);
 
 		res.json(updated);
@@ -46,13 +46,14 @@ router.put("/me", async (req, res, next) => {
 // PUT salva il menù
 router.put("/me/menu", async (req, res, next) => {
 	try {
-		const ristorante = await schemaRistorante.findOne();
-
-		const updated = await schemaRistorante.findByIdAndUpdate(
-			ristorante._id,
+		const updated = await schemaRistorante.findOneAndUpdate(
+			{proprietario: req.utenteLoggato.idUtente},
 			{$set: {menu: req.body}},
 			{returnDocument: 'after', runValidators: true}
 		);
+		if (!updated) {
+			return res.status(404).json({message: "Crea prima il profilo generale del ristorante!"});
+		}
 
 		res.json(updated.menu);
 	} catch (error) {

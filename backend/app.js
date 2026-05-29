@@ -9,6 +9,7 @@ import {connectDB} from "./src/config/database.js";
 import routesRistorante from "./src/routes/routesRistorante.js";
 import routesCatalogo from "./src/routes/routesCatalogo.js";
 import routesClienti from "./src/routes/routesClienti.js";
+import routesAuth from "./src/routes/routesAuth.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,7 +17,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Middleware globale per la gestione degli errori
+await connectDB();
+
+app.use("/api/ristoranti", routesClienti)
+app.use("/api/ristoratore", routesRistorante);
+app.use("/api/catalogo", routesCatalogo);
+app.use("/api/auth", routesAuth);
+
+// Middleware per gestione errori
 app.use((error, req, res, next) => {
 	console.error("Errore:", error.message);
 
@@ -43,12 +51,6 @@ app.use((error, req, res, next) => {
 		message: "Errore interno del server. Riprovare più tardi."
 	});
 });
-
-await connectDB();
-
-app.use("/api/ristoranti", routesClienti)
-app.use("/api/ristoratore", routesRistorante);
-app.use("/api/catalogo", routesCatalogo);
 
 app.listen(PORT, () => {
 	console.log(`Server in esecuzione sulla porta ${PORT}`);
