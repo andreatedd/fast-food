@@ -89,7 +89,7 @@
 	const token = localStorage.getItem('token');
 	const ruolo = localStorage.getItem('ruolo');
 	if (!token || ruolo !== 'ristoratore') {
-		window.location.href = 'auth.html';
+		window.location.replace('auth.html');
 	}
 
 	function mostraMessaggio(messaggio, tipo) {
@@ -102,7 +102,7 @@
 	function esci() {
 		localStorage.removeItem('token');
 		localStorage.removeItem('ruolo');
-		window.location.href = 'auth.html';
+		window.location.replace('auth.html');
 	}
 
 	// Controllo creazione o modifica
@@ -167,7 +167,7 @@
 
 			setTimeout(() => {
 				window.location.href = 'dashboard.html';
-			}, 700);
+			}, 500);
 
 		} catch (error) {
 			mostraMessaggio("Errore di connessione al server.", "danger");

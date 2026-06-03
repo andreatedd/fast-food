@@ -161,7 +161,7 @@
 		alertBox.classList.remove('d-none');
 	}
 
-	// Rimuovi alert al cambio tab
+	// Rimuove alert al cambio tab
 	document.getElementById('authTabs').addEventListener('show.bs.tab', function () {
 		const alertBox = document.getElementById('alertBox');
 		alertBox.classList.add('d-none');
@@ -180,7 +180,7 @@
 			email: document.getElementById('regEmail').value.trim(),
 			password: document.getElementById('regPassword').value,
 			ruolo: document.getElementById('regRuolo').value,
-			// Inviamo i campi cliente solo se il ruolo è cliente
+			// invia campi cliente solo se ruolo === cliente
 			metodoPagamento: document.getElementById('regRuolo').value === 'cliente' ? document.getElementById('regPagamento').value : 'nessuno',
 			preferenze: document.getElementById('regRuolo').value === 'cliente' ? preferenzeSelezionate : []
 		};
@@ -205,7 +205,7 @@
 			// sposta su login
 			setTimeout(() => {
 				bootstrap.Tab.getOrCreateInstance(document.getElementById('login-tab')).show();
-			}, 1750);
+			}, 500);
 		} catch (error) {
 			mostraMessaggio("Impossibile connettersi al server.", "danger");
 		}
@@ -245,7 +245,7 @@
 				} else {
 					window.location.href = 'homepage.html';
 				}
-			}, 1000);
+			}, 500);
 
 		} catch (error) {
 			mostraMessaggio("Impossibile connettersi al server.", "danger");
