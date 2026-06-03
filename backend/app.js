@@ -10,6 +10,7 @@ import routesRistorante from "./src/routes/routesRistorante.js";
 import routesCatalogo from "./src/routes/routesCatalogo.js";
 import routesClienti from "./src/routes/routesClienti.js";
 import routesAuth from "./src/routes/routesAuth.js";
+import routesUtente from "./src/routes/routesUtente.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,7 +20,8 @@ app.use(express.json());
 
 await connectDB();
 
-app.use("/api/ristoranti", routesClienti)
+app.use("/api/ristoranti", routesClienti);
+app.use("/api/utenti", routesUtente);
 app.use("/api/ristoratore", routesRistorante);
 app.use("/api/catalogo", routesCatalogo);
 app.use("/api/auth", routesAuth);

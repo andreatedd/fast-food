@@ -6,11 +6,11 @@ export const verificaToken = (req, res, next) => {
 	if (!authHeader || !authHeader.startsWith("Bearer ")) {
 		return res.status(401).json({ message: "Token mancante." });
 	}
-	// togliamo "Bearer" per ottenere solo il token
+	// toglie "Bearer" per ottenere solo il token
 	const token = authHeader.split(" ")[1];
 
 	try {
-		// Verifichiamo il token
+		// verifica token
 		req.utenteLoggato = jwt.verify(token, process.env.JWT_SECRET);
 		next();
 	} catch (error) {
