@@ -112,20 +112,9 @@
 									</select>
 
 									<label class="form-label small mb-1">Cosa ti piace mangiare?</label><br>
-									<div class="form-check form-check-inline">
-										<input class="form-check-input preferenza-check" type="checkbox"
-										       value="Hamburger" aria-label="preferenza hamburger">
-										<label class="form-check-label small">Hamburger</label>
-									</div>
-									<div class="form-check form-check-inline">
-										<input class="form-check-input preferenza-check" type="checkbox" value="Pizza"
-										       aria-label="preferenza pizza">
-										<label class="form-check-label small">Pizza</label>
-									</div>
-									<div class="form-check form-check-inline">
-										<input class="form-check-input preferenza-check" type="checkbox"
-										       value="Dessert" aria-label="preferenza dessert">
-										<label class="form-check-label small">Dessert</label>
+									<div id="contenitoreCategorie" class="mb-3">
+										<span class="spinner-border spinner-border-sm text-danger" role="status"></span>
+										<small class="text-muted"> Caricamento categorie...</small>
 									</div>
 								</div>
 
@@ -152,6 +141,48 @@
 			campiCliente.classList.add('d-none');
 		}
 	});
+
+	// Carica dinamicamente le categorie per le preferenze
+	async function caricaCategorie() {
+		try {
+			const response = await fetch('http://localhost:3000/api/catalogo/categorie');
+			const categorie = await response.json();
+			const contenitore = document.getElementById('contenitoreCategorie');
+			contenitore.innerHTML = '';
+
+			let html = '';
+			const maxVisibili = 4; // mostriamo prime 4 categorie
+
+			categorie.forEach((cat, index) => {
+				const checkboxHtml = `
+				<div class="form-check form-check-inline">
+					<input class="form-check-input preferenza-check" type="checkbox" value="${cat}" id="cat_${index}">
+					<label class="form-check-label small" for="cat_${index}">${cat}</label>
+				</div>`;
+
+				if (index === maxVisibili) {
+					// Apriamo il Collapse nascosto dalla quinta in poi
+					html += `<div class="collapse mt-2" id="altrePreferenze">`;
+				}
+				html += checkboxHtml;
+			});
+
+			if (categorie.length > maxVisibili) {
+				html += `</div>`;
+				html += `
+				<div class="mt-2">
+					<a class="text-danger small fw-bold text-decoration-none" data-bs-toggle="collapse" href="#altrePreferenze" role="button" aria-expanded="false" aria-controls="altrePreferenze" onclick="this.innerText = this.innerText.includes('Mostra') ? 'Nascondi categorie ▲' : 'Mostra altre categorie ▼'">
+						Mostra altre categorie ▼
+					</a>
+				</div>`;
+			}
+			contenitore.innerHTML = html;
+		} catch (error) {
+			document.getElementById('contenitoreCategorie').innerHTML = '<small class="text-danger">Errore nel caricamento categorie.</small>';
+		}
+	}
+
+	document.addEventListener('DOMContentLoaded', caricaCategorie);
 
 	// Funzione per mostrare messaggi di errore o successo
 	function mostraMessaggio(messaggio, tipo) {

@@ -77,20 +77,10 @@
 							</select>
 
 							<label class="form-label small fw-semibold mb-1">I tuoi cibi preferiti</label><br>
-							<div class="form-check form-check-inline">
-								<input class="form-check-input preferenza-check" type="checkbox" value="Hamburger"
-								       id="prefHamburger">
-								<label class="form-check-label small" for="prefHamburger">Hamburger</label>
-							</div>
-							<div class="form-check form-check-inline">
-								<input class="form-check-input preferenza-check" type="checkbox" value="Pizza"
-								       id="prefPizza">
-								<label class="form-check-label small" for="prefPizza">Pizza</label>
-							</div>
-							<div class="form-check form-check-inline">
-								<input class="form-check-input preferenza-check" type="checkbox" value="Dessert"
-								       id="prefDessert">
-								<label class="form-check-label small" for="prefDessert">Dessert</label>
+							<label class="form-label small mb-1">Cosa ti piace mangiare?</label><br>
+							<div id="contenitoreCategorie" class="mb-3">
+								<span class="spinner-border spinner-border-sm text-danger" role="status"></span>
+								<small class="text-muted"> Caricamento categorie...</small>
 							</div>
 						</div>
 
@@ -144,8 +134,48 @@
 		window.location.replace('auth.html');
 	}
 
+	// Carica categorie dinamicamente
+	async function caricaCategorie() {
+		try {
+			const response = await fetch('http://localhost:3000/api/catalogo/categorie');
+			const categorie = await response.json();
+			const contenitore = document.getElementById('contenitoreCategorie');
+			contenitore.innerHTML = '';
+
+			let html = '';
+			const maxVisibili = 4;
+
+			categorie.forEach((cat, index) => {
+				const checkboxHtml = `
+				<div class="form-check form-check-inline">
+					<input class="form-check-input preferenza-check" type="checkbox" value="${cat}" id="cat_${index}">
+					<label class="form-check-label small" for="cat_${index}">${cat}</label>
+				</div>`;
+
+				if (index === maxVisibili) {
+					html += `<div class="collapse mt-2" id="altrePreferenze">`;
+				}
+				html += checkboxHtml;
+			});
+
+			if (categorie.length > maxVisibili) {
+				html += `</div>`;
+				html += `
+				<div class="mt-2">
+					<a class="text-danger small fw-bold text-decoration-none" data-bs-toggle="collapse" href="#altrePreferenze" role="button" aria-expanded="false" aria-controls="altrePreferenze" onclick="this.innerText = this.innerText.includes('Mostra') ? 'Nascondi categorie ▲' : 'Mostra altre categorie ▼'">
+						Mostra altre categorie ▼
+					</a>
+				</div>`;
+			}
+			contenitore.innerHTML = html;
+		} catch (error) {
+			document.getElementById('contenitoreCategorie').innerHTML = '<small class="text-danger">Errore nel caricamento categorie.</small>';
+		}
+	}
+
 	// carica dati form
 	document.addEventListener('DOMContentLoaded', async () => {
+		await caricaCategorie();
 		try {
 			const response = await fetch('http://localhost:3000/api/utenti/me', {
 				headers: {'Authorization': `Bearer ${token}`}
@@ -173,16 +203,16 @@
 			}
 
 			if (ruolo === 'cliente') {
-                document.getElementById('listaLinkPersonali').innerHTML = `
+				document.getElementById('listaLinkPersonali').innerHTML = `
                     <li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Il mio Profilo</a></li>
                     <li><a class="dropdown-item" href="storico_ordini.html"><i class="bi bi-receipt me-2"></i> I miei Ordini</a></li>
                 `;
-            } else if (ruolo === 'ristoratore') {
-                document.getElementById('listaLinkPersonali').innerHTML = `
+			} else if (ruolo === 'ristoratore') {
+				document.getElementById('listaLinkPersonali').innerHTML = `
                     <li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-shop me-2"></i> Dashboard Locale</a></li>
                     <li><a class="dropdown-item" href="gestione_ordini.html"><i class="bi bi-receipt me-2"></i> Gestione Ordini</a></li>
                 `;
-            }
+			}
 
 		} catch (error) {
 			console.error(error);
