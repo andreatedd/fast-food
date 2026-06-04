@@ -23,7 +23,7 @@ router.post("/signup", async (req, res) => {
 	}
 
 	try {
-		const passwordCriptata = await bcrypt.hash(password, 10); // cifratura password
+		const passwordCriptata = await bcrypt.hash(password, 10);
 		await schemaUtente.create({
 			nome,
 			cognome,

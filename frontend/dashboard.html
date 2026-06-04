@@ -20,6 +20,8 @@
 				<i class="bi bi-person-circle me-1"></i> Area Ristoratore
 			</button>
 			<ul class="dropdown-menu dropdown-menu-end shadow">
+				<li><a class="dropdown-item" href="gestione_ordini.html"><i
+						class="bi bi-receipt me-2"></i> Gestione Ordini</a></li>
 				<li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Profilo Utente</a>
 				</li>
 				<li><a class="dropdown-item" href="crea_ristorante.html"><i class="bi bi-gear me-2"></i> Impostazioni
@@ -145,6 +147,10 @@
 					<div class="mb-3">
 						<label class="form-label small fw-bold text-muted">Ingredienti (separati da virgola)</label>
 						<textarea class="form-control bg-light" id="piattoIngredienti" rows="2" required></textarea>
+					</div>
+					<div class="mb-3">
+						<label class="form-label small fw-bold text-muted">Ricetta (Opzionale)</label>
+						<textarea class="form-control bg-light" id="piattoRicetta" rows="3"></textarea>
 					</div>
 					<div class="mb-3">
 						<label class="form-label small fw-bold text-muted">URL Foto</label>
@@ -278,6 +284,7 @@
 						document.getElementById('piattoFoto').value = piatto.strMealThumb;
 						document.getElementById('piattoIndice').value = "-1";
 						document.getElementById('formPiatto').dataset.idMeal = piatto.idMeal;
+						document.getElementById('piattoRicetta').value = piatto.strInstructions || "";
 						bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPiatto')).show();
 					} else {
 						alert('Piatto già presente nel tuo menù!');
@@ -307,6 +314,7 @@
 		document.getElementById('piattoIngredienti').value = piatto.ingredients.join(', ');
 		document.getElementById('piattoFoto').value = piatto.strMealThumb;
 		document.getElementById('piattoIndice').value = index;
+		document.getElementById('piattoRicetta').value = piatto.strInstructions || "";
 		bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPiatto')).show();
 	}
 
@@ -319,7 +327,8 @@
 			strCategory: document.getElementById('piattoTipologia').value.trim(),
 			prezzo: parseFloat(document.getElementById('piattoPrezzo').value),
 			ingredients: document.getElementById('piattoIngredienti').value.split(',').map(ing => ing.trim()),
-			strMealThumb: document.getElementById('piattoFoto').value.trim()
+			strMealThumb: document.getElementById('piattoFoto').value.trim(),
+			strInstructions: document.getElementById('piattoRicetta').value.trim()
 		};
 
 		if (index === -1) {

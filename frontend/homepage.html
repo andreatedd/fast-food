@@ -25,16 +25,22 @@
 				</li>
 			</ul>
 
-            <div class="d-flex align-items-center">
-                <div id="nav-guest" class="d-flex">
-                    <a href="auth.html" class="btn btn-light text-danger fw-bold">Accedi</a>
-                </div>
+			<div class="d-flex align-items-center">
+				<div id="nav-guest" class="d-flex">
+					<a href="auth.html" class="btn btn-light text-danger fw-bold">Accedi</a>
+				</div>
 
-                <div id="nav-user" class="d-flex d-none gap-2">
-                    <a href="#" id="linkAreaPersonale" class="btn btn-outline-light"><i class="bi bi-person-circle me-1"></i> Area Personale</a>
-                    <button class="btn btn-light text-danger fw-bold" onclick="esci()">Esci</button>
-                </div>
-            </div>
+				<div id="nav-user" class="d-flex d-none gap-2">
+					<div class="dropdown">
+						<button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+							<i class="bi bi-person-circle me-1"></i> Area Personale
+						</button>
+						<ul class="dropdown-menu dropdown-menu-end shadow" id="menu-dropdown">
+						</ul>
+					</div>
+					<button class="btn btn-light text-danger fw-bold" onclick="esci()">Esci</button>
+				</div>
+			</div>
 
 		</div>
 	</div>
@@ -101,35 +107,39 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // gestione navbar dinamica
-    document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('token');
-        const ruolo = localStorage.getItem('ruolo');
+	// gestione navbar dinamica
+	document.addEventListener('DOMContentLoaded', () => {
+		const token = localStorage.getItem('token');
+		const ruolo = localStorage.getItem('ruolo');
 
-        const navGuest = document.getElementById('nav-guest');
-        const navUser = document.getElementById('nav-user');
-        const linkAreaPersonale = document.getElementById('linkAreaPersonale');
+		const navGuest = document.getElementById('nav-guest');
+		const navUser = document.getElementById('nav-user');
+		const linkAreaPersonale = document.getElementById('linkAreaPersonale');
 
-        if (token && ruolo) {
-            // nasconde pulsanti Accedi/Registrati, mostra pulsanti Utente
-            navGuest.classList.add('d-none');
-            navUser.classList.remove('d-none');
+		if (token && ruolo) {
+			navGuest.classList.add('d-none');
+			navUser.classList.remove('d-none');
 
-            if (ruolo === 'cliente') {
-                linkAreaPersonale.href = 'profilo_utente.html';
-                linkAreaPersonale.innerHTML = '<i class="bi bi-person-circle me-1"></i> Il mio Profilo';
-            } else if (ruolo === 'ristoratore') {
-                linkAreaPersonale.href = 'dashboard.html';
-                linkAreaPersonale.innerHTML = '<i class="bi bi-shop me-1"></i> Dashboard Locale';
-            }
-        }
-    });
+			if (ruolo === 'cliente') {
+				document.getElementById('menu-dropdown').innerHTML = `
+                    <li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Il mio Profilo</a></li>
+                    <li><a class="dropdown-item" href="storico_ordini.html"><i class="bi bi-receipt me-2"></i> I miei Ordini</a></li>
+                `;
+			} else if (ruolo === 'ristoratore') {
+				document.getElementById('menu-dropdown').innerHTML = `
+                    <li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-shop me-2"></i> Dashboard Locale</a></li>
+                    <li><a class="dropdown-item fw-bold text-danger" href="gestione_ordini.html"><i class="bi bi-receipt me-2"></i> Gestione Ordini</a></li>
+                    <li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Profilo Utente</a></li>
+                `;
+			}
+		}
+	});
 
-    function esci() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('ruolo');
-        window.location.reload();
-    }
+	function esci() {
+		localStorage.removeItem('token');
+		localStorage.removeItem('ruolo');
+		window.location.reload();
+	}
 
 	let ristorantiDB = [];
 

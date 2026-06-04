@@ -15,8 +15,16 @@
 			<i class="bi bi-shop"></i> FastFood App
 		</a>
 		<div class="d-flex gap-2">
-            <a href="homepage.html" class="btn btn-outline-light btn-sm"><i class="bi bi-house me-1"></i> Home</a>
-			<button class="btn btn-light text-danger btn-sm fw-bold" onclick="esci()"><i class="bi bi-box-arrow-right me-1"></i> Esci</button>
+			<a href="homepage.html" class="btn btn-outline-light btn-sm"><i class="bi bi-house me-1"></i> Home</a>
+
+			<div class="dropdown" id="dropdownAreaPersonale">
+				<button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+					<i class="bi bi-person-circle me-1"></i> Area Personale
+				</button>
+				<ul class="dropdown-menu dropdown-menu-end shadow" id="listaLinkPersonali">
+				</ul>
+			</div>
+
 		</div>
 	</div>
 </nav>
@@ -27,7 +35,8 @@
 
 			<div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
 				<div class="card-header bg-white p-4 border-bottom">
-					<h4 class="mb-0 fw-bold"><i class="bi bi-person-circle text-danger me-2"></i> I tuoi Dati Personali</h4>
+					<h4 class="mb-0 fw-bold"><i class="bi bi-person-circle text-danger me-2"></i> I tuoi Dati Personali
+					</h4>
 				</div>
 
 				<div class="card-body p-4 p-md-5">
@@ -47,38 +56,43 @@
 								<label class="form-label fw-semibold">Email</label>
 								<input type="email" class="form-control bg-light" id="profiloEmail" required>
 							</div>
-                            <div class="col-12 border-top pt-3 mt-4">
+							<div class="col-12 border-top pt-3 mt-4">
 								<label class="form-label fw-semibold">Nuova Password</label>
-								<input type="password" class="form-control bg-light" id="profiloPassword" placeholder="Nuova Password">
-                                <small class="text-muted">Minimo 6 caratteri</small>
+								<input type="password" class="form-control bg-light" id="profiloPassword"
+								       placeholder="Nuova Password">
+								<small class="text-muted">Minimo 6 caratteri</small>
 							</div>
 						</div>
 
-                        <div id="sezionePreferenze" class="bg-danger-subtle p-4 rounded-3 mb-4">
-                            <h6 class="fw-bold mb-3"><i class="bi bi-star-fill text-danger me-2"></i> Le tue Preferenze</h6>
+						<div id="sezionePreferenze" class="bg-danger-subtle p-4 rounded-3 mb-4">
+							<h6 class="fw-bold mb-3"><i class="bi bi-star-fill text-danger me-2"></i> Le tue Preferenze
+							</h6>
 
-                            <label class="form-label small fw-semibold">Metodo di Pagamento Predefinito</label>
-                            <select class="form-select form-select-sm bg-white mb-3" id="profiloPagamento">
-                                <option value="nessuno">---</option>
-                                <option value="carta_di_credito">Carta di Credito</option>
-                                <option value="carta_prepagata">Carta Prepagata</option>
-                                <option value="alla_consegna">Contanti alla Consegna</option>
-                            </select>
+							<label class="form-label small fw-semibold">Metodo di Pagamento Predefinito</label>
+							<select class="form-select form-select-sm bg-white mb-3" id="profiloPagamento">
+								<option value="nessuno">---</option>
+								<option value="carta_di_credito">Carta di Credito</option>
+								<option value="carta_prepagata">Carta Prepagata</option>
+								<option value="alla_consegna">Contanti alla Consegna</option>
+							</select>
 
-                            <label class="form-label small fw-semibold mb-1">I tuoi cibi preferiti</label><br>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input preferenza-check" type="checkbox" value="Hamburger" id="prefHamburger">
-                                <label class="form-check-label small" for="prefHamburger">Hamburger</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input preferenza-check" type="checkbox" value="Pizza" id="prefPizza">
-                                <label class="form-check-label small" for="prefPizza">Pizza</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input preferenza-check" type="checkbox" value="Dessert" id="prefDessert">
-                                <label class="form-check-label small" for="prefDessert">Dessert</label>
-                            </div>
-                        </div>
+							<label class="form-label small fw-semibold mb-1">I tuoi cibi preferiti</label><br>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input preferenza-check" type="checkbox" value="Hamburger"
+								       id="prefHamburger">
+								<label class="form-check-label small" for="prefHamburger">Hamburger</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input preferenza-check" type="checkbox" value="Pizza"
+								       id="prefPizza">
+								<label class="form-check-label small" for="prefPizza">Pizza</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input preferenza-check" type="checkbox" value="Dessert"
+								       id="prefDessert">
+								<label class="form-check-label small" for="prefDessert">Dessert</label>
+							</div>
+						</div>
 
 						<button type="submit" class="btn btn-danger w-100 py-3 fw-bold shadow-sm">
 							<i class="bi bi-save me-2"></i> Salva Modifiche
@@ -87,15 +101,16 @@
 				</div>
 			</div>
 
-            <div class="card shadow-sm border-danger border-opacity-50 rounded-4 overflow-hidden">
-                <div class="card-body p-4 text-center bg-white">
-                    <h5 class="fw-bold text-danger mb-2">Elimina Account</h5>
-                    <p class="text-muted small mb-3">Se elimini il tuo account, perderai tutte le informazioni. L'azione è irreversibile.</p>
-                    <button class="btn btn-outline-danger" onclick="eliminaAccount()">
-                        <i class="bi bi-trash-fill me-1"></i> Elimina Account Definitivamente
-                    </button>
-                </div>
-            </div>
+			<div class="card shadow-sm border-danger border-opacity-50 rounded-4 overflow-hidden">
+				<div class="card-body p-4 text-center bg-white">
+					<h5 class="fw-bold text-danger mb-2">Elimina Account</h5>
+					<p class="text-muted small mb-3">Se elimini il tuo account, perderai tutte le informazioni. L'azione
+						è irreversibile.</p>
+					<button class="btn btn-outline-danger" onclick="eliminaAccount()">
+						<i class="bi bi-trash-fill me-1"></i> Elimina Account Definitivamente
+					</button>
+				</div>
+			</div>
 
 		</div>
 	</div>
@@ -107,20 +122,20 @@
 	const token = localStorage.getItem('token');
 	const ruolo = localStorage.getItem('ruolo');
 
-    if (!token) {
+	if (!token) {
 		window.location.replace('auth.html');
 	}
 
 	if (ruolo === 'ristoratore') {
-        document.getElementById('sezionePreferenze').classList.add('d-none');
-    }
+		document.getElementById('sezionePreferenze').classList.add('d-none');
+	}
 
 	function mostraMessaggio(messaggio, tipo) {
 		const alertBox = document.getElementById('alertBox');
 		alertBox.className = `alert alert-${tipo} text-center`;
 		alertBox.textContent = messaggio;
 		alertBox.classList.remove('d-none');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+		window.scrollTo({top: 0, behavior: 'smooth'});
 	}
 
 	function esci() {
@@ -133,11 +148,11 @@
 	document.addEventListener('DOMContentLoaded', async () => {
 		try {
 			const response = await fetch('http://localhost:3000/api/utenti/me', {
-				headers: { 'Authorization': `Bearer ${token}` }
+				headers: {'Authorization': `Bearer ${token}`}
 			});
 			const utente = await response.json();
 
-            if (!response.ok) {
+			if (!response.ok) {
 				mostraMessaggio("Errore: " + (utente.message || "Impossibile caricare i dati"), "danger");
 				return;
 			}
@@ -146,15 +161,27 @@
 			document.getElementById('profiloCognome').value = utente.cognome;
 			document.getElementById('profiloEmail').value = utente.email;
 
-            if (utente.metodoPagamento) {
-                document.getElementById('profiloPagamento').value = utente.metodoPagamento;
-            }
-            if (utente.preferenze && utente.preferenze.length > 0) {
-                document.querySelectorAll('.preferenza-check').forEach(checkbox => {
-                    if (utente.preferenze.includes(checkbox.value)) {
-                        checkbox.checked = true;
-                    }
-                });
+			if (utente.metodoPagamento) {
+				document.getElementById('profiloPagamento').value = utente.metodoPagamento;
+			}
+			if (utente.preferenze && utente.preferenze.length > 0) {
+				document.querySelectorAll('.preferenza-check').forEach(checkbox => {
+					if (utente.preferenze.includes(checkbox.value)) {
+						checkbox.checked = true;
+					}
+				});
+			}
+
+			if (ruolo === 'cliente') {
+                document.getElementById('listaLinkPersonali').innerHTML = `
+                    <li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Il mio Profilo</a></li>
+                    <li><a class="dropdown-item" href="storico_ordini.html"><i class="bi bi-receipt me-2"></i> I miei Ordini</a></li>
+                `;
+            } else if (ruolo === 'ristoratore') {
+                document.getElementById('listaLinkPersonali').innerHTML = `
+                    <li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-shop me-2"></i> Dashboard Locale</a></li>
+                    <li><a class="dropdown-item" href="gestione_ordini.html"><i class="bi bi-receipt me-2"></i> Gestione Ordini</a></li>
+                `;
             }
 
 		} catch (error) {
@@ -167,20 +194,20 @@
 	document.getElementById('formProfilo').addEventListener('submit', async function (event) {
 		event.preventDefault();
 
-        const preferenzeSelezionate = Array.from(document.querySelectorAll('.preferenza-check:checked')).map(cb => cb.value);
-        const passwordInput = document.getElementById('profiloPassword').value;
+		const preferenzeSelezionate = Array.from(document.querySelectorAll('.preferenza-check:checked')).map(cb => cb.value);
+		const passwordInput = document.getElementById('profiloPassword').value;
 
 		const datiAggiornati = {
 			nome: document.getElementById('profiloNome').value.trim(),
 			cognome: document.getElementById('profiloCognome').value.trim(),
 			email: document.getElementById('profiloEmail').value.trim(),
-            metodoPagamento: document.getElementById('profiloPagamento').value,
-            preferenze: preferenzeSelezionate
+			metodoPagamento: document.getElementById('profiloPagamento').value,
+			preferenze: preferenzeSelezionate
 		};
 
-        if (passwordInput.trim() !== "") {
-            datiAggiornati.password = passwordInput;
-        }
+		if (passwordInput.trim() !== "") {
+			datiAggiornati.password = passwordInput;
+		}
 
 		try {
 			const response = await fetch('http://localhost:3000/api/utenti/me', {
@@ -200,36 +227,36 @@
 			}
 
 			mostraMessaggio("Profilo aggiornato con successo!", "success");
-            document.getElementById('profiloPassword').value = "";
+			document.getElementById('profiloPassword').value = "";
 
 		} catch (error) {
 			mostraMessaggio("Errore di connessione al server.", "danger");
 		}
 	});
 
-    // elimina account
-    async function eliminaAccount() {
-        const conferma = confirm("Sei davvero sicuro di voler eliminare il tuo account? Questa operazione NON può essere annullata.");
+	// elimina account
+	async function eliminaAccount() {
+		const conferma = confirm("Sei davvero sicuro di voler eliminare il tuo account? Questa operazione NON può essere annullata.");
 
-        if (conferma) {
-            try {
-                const response = await fetch('http://localhost:3000/api/utenti/me', {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+		if (conferma) {
+			try {
+				const response = await fetch('http://localhost:3000/api/utenti/me', {
+					method: 'DELETE',
+					headers: {'Authorization': `Bearer ${token}`}
+				});
 
-                if (response.ok) {
-                    alert("Account eliminato con successo.");
-                    esci();
-                } else {
-                    const errorData = await response.json();
-                    mostraMessaggio(errorData.message || "Impossibile eliminare l'account.", "danger");
-                }
-            } catch (error) {
-                mostraMessaggio("Errore di connessione al server.", "danger");
-            }
-        }
-    }
+				if (response.ok) {
+					alert("Account eliminato con successo.");
+					esci();
+				} else {
+					const errorData = await response.json();
+					mostraMessaggio(errorData.message || "Impossibile eliminare l'account.", "danger");
+				}
+			} catch (error) {
+				mostraMessaggio("Errore di connessione al server.", "danger");
+			}
+		}
+	}
 </script>
 </body>
 </html>
