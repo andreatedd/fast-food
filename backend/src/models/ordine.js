@@ -6,12 +6,14 @@ const schemaOrdine = new Schema({
 	cliente: {
 		type: Schema.Types.ObjectId,
 		ref: "User",
-		required: true
+		required: true,
+		index: true
 	},
 	ristorante: {
 		type: Schema.Types.ObjectId,
 		ref: "Restaurant",
-		required: true
+		required: true,
+		index: true
 	},
 	piatti: [{
 		nome: {type: String, required: true},
@@ -33,5 +35,12 @@ const schemaOrdine = new Schema({
 		required: true
 	}
 }, {timestamps: true});
+
+// index per calcolo tempistiche ordini
+schemaOrdine.index({ ristorante: 1, stato: 1 });
+
+// index per calcolo storico ordini (ordinamento)
+schemaOrdine.index({ ristorante: 1, createdAt: -1 });
+schemaOrdine.index({ cliente: 1, createdAt: -1 });
 
 export default mongoose.model("Ordine", schemaOrdine);
