@@ -2,25 +2,13 @@ import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import schemaUtente from "../models/user.js";
+import { validaRegistrazione, validaLogin } from "../middlewares/validations.js";
 
 const router = express.Router();
 
 // POST registrazione
-router.post("/signup", async (req, res) => {
+router.post("/signup", validaRegistrazione, async (req, res, next) => {
 	const {nome, cognome, email, password, ruolo, metodoPagamento, preferenze} = req.body;
-
-	if (!nome || nome.length < 2) {
-		return res.status(400).json({message: "Nome troppo corto"});
-	}
-	if (!cognome || cognome.length < 2) {
-		return res.status(400).json({message: "Cognome troppo corto"});
-	}
-	if (!email || !password) {
-		return res.status(400).json({message: "Email e password sono obbligatorie"});
-	}
-	if (password.length < 6) {
-		return res.status(400).json({message: "La password deve contenere almeno 6 caratteri"});
-	}
 
 	try {
 		const passwordCriptata = await bcrypt.hash(password, 10);
@@ -36,16 +24,12 @@ router.post("/signup", async (req, res) => {
 		res.status(201).json({message: "Registrazione completata con successo!"});
 
 	} catch (error) {
-		if (error.code === 11000) {
-			res.status(409).json({message: "Email già in uso"});
-		} else {
-			res.status(500).json({message: "Errore interno del server durante la registrazione"});
-		}
+		next(error);
 	}
 });
 
 // POST login
-router.post("/login", async (req, res) => {
+router.post("/login", validaLogin, async (req, res, next) => {
 	const {email, password} = req.body;
 
 	try {
@@ -73,7 +57,7 @@ router.post("/login", async (req, res) => {
 		});
 
 	} catch (error) {
-		res.status(500).json({message: "Errore interno del server durante il login"});
+		next(error);
 	}
 });
 

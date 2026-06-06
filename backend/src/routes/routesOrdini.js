@@ -1,8 +1,13 @@
 import express from "express";
 import schemaOrdine from "../models/ordine.js";
 import schemaRistorante from "../models/ristorante.js";
-import { verificaToken, soloRistoratori } from "../middlewares/auth.js";
-
+import {
+    verificaToken,
+    soloRistoratori,
+    validaNuovoOrdine,
+    validaIdMongo,
+    validaStatoOrdine
+} from "../middlewares/validations.js";
 const router = express.Router();
 
 router.use(verificaToken);
@@ -10,17 +15,13 @@ router.use(verificaToken);
 // API CLIENTE
 
 // POST nuovo ordine
-router.post("/", async (req, res, next) => {
+router.post("/", validaNuovoOrdine, async (req, res, next) => {
 	try {
 		if (req.utenteLoggato.ruolo !== 'cliente') {
 			return res.status(403).json({ message: "Solo i clienti possono effettuare ordini." });
 		}
 
 		const { ristoranteId, piatti } = req.body;
-
-		if (!piatti || piatti.length === 0) {
-			return res.status(400).json({ message: "Il carrello è vuoto." });
-		}
 
 		// calcolo prezzo tot
 		let totale = 0;

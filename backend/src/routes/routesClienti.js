@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import schemaRistorante from "../models/ristorante.js";
+import { validaIdMongo } from "../middlewares/validations.js";
 
 const router = express.Router();
 
@@ -30,7 +31,7 @@ router.get("/", async (req, res, next) => {
 });
 
 // GET ristorante
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", validaIdMongo, async (req, res, next) => {
 	try {
 		const ristorante = await schemaRistorante.findById(req.params.id);
 		if (!ristorante) {
@@ -38,15 +39,12 @@ router.get("/:id", async (req, res, next) => {
 		}
 		res.json(ristorante);
 	} catch (error) {
-		if (error.name === 'CastError') {
-			return res.status(400).json({message: "ID Ristorante non valido"});
-		}
 		next(error);
 	}
 });
 
 // GET piatti di un ristorante con filtri dinamici
-router.get("/:id/piatti", async (req, res, next) => {
+router.get("/:id/piatti", validaIdMongo, async (req, res, next) => {
 	try {
 		const {tipo, testo} = req.query;
 

@@ -2,7 +2,8 @@ import express from "express";
 import bcrypt from "bcrypt";
 import schemaUtente from "../models/user.js";
 import schemaRistorante from "../models/ristorante.js";
-import { verificaToken } from "../middlewares/auth.js";
+import { verificaToken } from "../middlewares/validations.js";
+import { validaAggiornamentoUtente } from "../middlewares/validations.js";
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ router.get("/me", async (req, res, next) => {
 });
 
 // PUT aggiorna dati
-router.put("/me", async (req, res, next) => {
+router.put("/me", validaAggiornamentoUtente, async (req, res, next) => {
 	try {
 		const { nome, cognome, email, password, metodoPagamento, preferenze } = req.body;
 
@@ -41,9 +42,6 @@ router.put("/me", async (req, res, next) => {
 		}
 
 		if (password) {
-			if (password.length < 6) {
-				return res.status(400).json({ message: "La password deve contenere almeno 6 caratteri" });
-			}
 			datiDaAggiornare.password = await bcrypt.hash(password, 10);
 		}
 
@@ -63,7 +61,7 @@ router.put("/me", async (req, res, next) => {
 	}
 });
 
-// DELETE cancella accccount
+// DELETE cancella account
 router.delete("/me", async (req, res, next) => {
 	try {
 		const idUtente = req.utenteLoggato.idUtente;

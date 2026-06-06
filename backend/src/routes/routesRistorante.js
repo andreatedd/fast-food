@@ -1,7 +1,11 @@
 import express from "express";
 import schemaRistorante from "../models/ristorante.js";
-import {verificaToken, soloRistoratori} from "../middlewares/auth.js";
-
+import {
+    verificaToken,
+    soloRistoratori,
+    validaDatiRistorante,
+    validaMenuRistorante
+} from "../middlewares/validations.js";
 const router = express.Router();
 
 router.use(verificaToken, soloRistoratori);
@@ -23,7 +27,7 @@ router.get("/me", async (req, res, next) => {
 });
 
 // PUT aggiorna o salva informazioni ristorante
-router.put("/me", async (req, res, next) => {
+router.put("/me", validaDatiRistorante, async (req, res, next) => {
 	try {
 		const datiDaSalvare = {...req.body, proprietario: req.utenteLoggato.idUtente};
 
@@ -44,7 +48,7 @@ router.put("/me", async (req, res, next) => {
 });
 
 // PUT salva il menù
-router.put("/me/menu", async (req, res, next) => {
+router.put("/me/menu", validaMenuRistorante, async (req, res, next) => {
 	try {
 		const updated = await schemaRistorante.findOneAndUpdate(
 			{proprietario: req.utenteLoggato.idUtente},
