@@ -183,8 +183,11 @@
 			const utente = await response.json();
 
 			if (!response.ok) {
-				mostraMessaggio("Errore: " + (utente.message || "Impossibile caricare i dati"), "danger");
-				return;
+				if (response.status === 401) {
+					alert("Sessione scaduta. Effettua nuovamente l'accesso.");
+					esci();
+					return;
+				}
 			}
 
 			document.getElementById('profiloNome').value = utente.nome;
@@ -252,8 +255,11 @@
 			const risultato = await response.json();
 
 			if (!response.ok) {
-				mostraMessaggio("Errore: " + (risultato.message || "Dati non validi"), "danger");
-				return;
+				if (response.status === 401) {
+					alert("Sessione scaduta. Effettua nuovamente l'accesso.");
+					esci();
+					return;
+				}
 			}
 
 			mostraMessaggio("Profilo aggiornato con successo!", "success");

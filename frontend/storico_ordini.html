@@ -109,8 +109,11 @@
 			});
 
 			if (!response.ok) {
-				alert("Errore durante il caricamento dello storico.");
-				return;
+				if (response.status === 401) {
+					alert("Sessione scaduta. Effettua nuovamente l'accesso.");
+					esci();
+					return;
+				}
 			}
 
 			const ordini = await response.json();

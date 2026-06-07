@@ -111,6 +111,13 @@
 			const response = await fetch('http://localhost:3000/api/ristoratore/me', {
 				headers: {'Authorization': `Bearer ${token}`}
 			});
+			if (!response.ok) {
+				if (response.status === 401) {
+					alert("Sessione scaduta. Effettua nuovamente l'accesso.");
+					esci();
+					return;
+				}
+			}
 			const dati = await response.json();
 
 			// Modifica
@@ -130,7 +137,8 @@
 				document.getElementById('testoBtnSalva').textContent = "Applica Modifiche";
 			}
 		} catch (error) {
-			console.error("Errore di connessione", error);
+			console.error("Errore: ", error);
+			mostraMessaggio("Errore di connessione al server.", "danger");
 		}
 	});
 
@@ -171,6 +179,7 @@
 
 		} catch (error) {
 			mostraMessaggio("Errore di connessione al server.", "danger");
+			console.error("Errore: " + error);
 		}
 	});
 </script>

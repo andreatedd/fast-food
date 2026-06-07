@@ -114,8 +114,11 @@
 			});
 
 			if (!response.ok) {
-				alert("Errore durante il caricamento degli ordini.");
-				return;
+				if (response.status === 401) {
+					alert("Sessione scaduta. Effettua nuovamente l'accesso.");
+					esci();
+					return;
+				}
 			}
 
 			const ordini = await response.json();
@@ -222,7 +225,8 @@
 			});
 
 			if (!response.ok) {
-				alert("Impossibile aggiornare lo stato dell'ordine.");
+				const errorData = await response.json();
+				alert("Errore: " + (errorData.message || "Impossibile aggiornare lo stato."));
 				return;
 			}
 
@@ -231,7 +235,6 @@
 
 		} catch (error) {
 			console.error(error);
-			alert("Errore di connessione al server.");
 		}
 	}
 
