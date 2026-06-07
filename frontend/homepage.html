@@ -18,28 +18,37 @@
 		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
 			<span class="navbar-toggler-icon"></span>
 		</button>
+
 		<div class="collapse navbar-collapse" id="navbarNav">
-			<div class="d-flex align-items-center">
-				<div id="nav-guest" class="d-flex">
-					<a href="auth.html" class="btn btn-light text-danger fw-bold">Accedi</a>
+			<div class="ms-auto d-flex align-items-center mt-2 mt-lg-0">
+
+				<div id="nav-guest" class="d-flex w-100">
+					<a href="auth.html" class="btn btn-light text-danger fw-bold w-100 shadow-sm">Accedi /
+						Registrati</a>
 				</div>
 
-				<div id="nav-user" class="d-flex d-none gap-2">
-					<div class="dropdown">
-						<button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+				<div id="nav-user" class="d-flex d-none gap-2 w-100">
+					<a href="homepage.html" class="btn btn-outline-light btn-sm d-flex align-items-center"><i
+							class="bi bi-house me-1"></i> Home</a>
+
+					<div class="dropdown flex-grow-1">
+						<button class="btn btn-outline-light btn-sm dropdown-toggle w-100 d-flex align-items-center justify-content-center"
+						        type="button" data-bs-toggle="dropdown">
 							<i class="bi bi-person-circle me-1"></i> Area Personale
 						</button>
-						<ul class="dropdown-menu dropdown-menu-end shadow" id="menu-dropdown">
+						<ul class="dropdown-menu dropdown-menu-end shadow" id="nav-menu-dropdown">
 						</ul>
 					</div>
-					<button class="btn btn-light text-danger fw-bold" onclick="esci()">Esci</button>
-				</div>
-			</div>
 
+					<button class="btn btn-light text-danger btn-sm fw-bold shadow-sm" onclick="esci()"><i
+							class="bi bi-box-arrow-right d-lg-none"></i><span class="d-none d-lg-inline"> Esci</span>
+					</button>
+				</div>
+
+			</div>
 		</div>
 	</div>
 </nav>
-
 <div class="bg-danger-subtle py-5 border-bottom border-danger-subtle text-center mb-5">
 	<div class="container">
 		<h1 class="display-5 fw-bold text-danger mb-3">Trova il fast food perfetto per te</h1>
@@ -117,27 +126,27 @@
 	const token = localStorage.getItem('token');
 	const ruolo = localStorage.getItem('ruolo');
 
-	// gestione navbar dinamica
 	document.addEventListener('DOMContentLoaded', () => {
 		const navGuest = document.getElementById('nav-guest');
 		const navUser = document.getElementById('nav-user');
-		const linkAreaPersonale = document.getElementById('linkAreaPersonale');
+		const menuDropdown = document.getElementById('nav-menu-dropdown');
 
 		if (token && ruolo) {
 			navGuest.classList.add('d-none');
 			navUser.classList.remove('d-none');
 
 			if (ruolo === 'cliente') {
-				document.getElementById('menu-dropdown').innerHTML = `
-                    <li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Il mio Profilo</a></li>
-                    <li><a class="dropdown-item" href="storico_ordini.html"><i class="bi bi-receipt me-2"></i> I miei Ordini</a></li>
-                `;
+				menuDropdown.innerHTML = `
+					<li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Il mio Profilo</a></li>
+					<li><a class="dropdown-item" href="storico_ordini.html"><i class="bi bi-bag-check me-2"></i> I miei Ordini</a></li>
+				`;
 			} else if (ruolo === 'ristoratore') {
-				document.getElementById('menu-dropdown').innerHTML = `
-                    <li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-shop me-2"></i> Dashboard Locale</a></li>
-                    <li><a class="dropdown-item" href="gestione_ordini.html"><i class="bi bi-receipt me-2"></i> Gestione Ordini</a></li>
-                    <li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Profilo Utente</a></li>
-                `;
+				menuDropdown.innerHTML = `
+					<li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-shop me-2"></i> Gestione Menù</a></li>
+					<li><a class="dropdown-item" href="gestione_ordini.html"><i class="bi bi-receipt me-2"></i> Ordini Ricevuti</a></li>
+					<li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Profilo Personale</a></li>
+					<li><a class="dropdown-item" href="crea_ristorante.html"><i class="bi bi-gear me-2"></i> Impostazioni Locale</a></li>
+				`;
 			}
 		}
 	});
@@ -247,7 +256,7 @@
 
 	document.addEventListener('DOMContentLoaded', caricaRistoranti);
 
-// Gestione Ricerca
+	// Gestione Ricerca
 	document.getElementById('formRicerca').addEventListener('submit', async function (event) {
 		event.preventDefault();
 		const tipoRicerca = document.getElementById('tipoRicerca').value;
