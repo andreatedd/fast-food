@@ -21,10 +21,17 @@ export const verificaToken = (req, res, next) => {
 	}
 };
 
-// Middleware per proteggere rotte riservate ai ristoratori
+// protezione rotte ristoratori e clienti
 export const soloRistoratori = (req, res, next) => {
 	if (req.utenteLoggato.ruolo !== 'ristoratore') {
 		return res.status(403).json({message: "Accesso negato. Area riservata ai ristoratori."});
+	}
+	next();
+};
+
+export const soloClienti = (req, res, next) => {
+	if (req.utenteLoggato.ruolo !== 'cliente') {
+		return res.status(403).json({ message: "Accesso negato. Accedi prima al tuo account Cliente." });
 	}
 	next();
 };

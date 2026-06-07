@@ -4,6 +4,7 @@ import schemaRistorante from "../models/ristorante.js";
 import {
     verificaToken,
     soloRistoratori,
+	soloClienti,
     validaNuovoOrdine,
     validaIdMongo,
     validaStatoOrdine
@@ -15,12 +16,8 @@ router.use(verificaToken);
 // API CLIENTE
 
 // POST nuovo ordine
-router.post("/", validaNuovoOrdine, async (req, res, next) => {
+router.post("/", soloClienti, validaNuovoOrdine, async (req, res, next) => {
 	try {
-		if (req.utenteLoggato.ruolo !== 'cliente') {
-			return res.status(403).json({ message: "Solo i clienti possono effettuare ordini." });
-		}
-
 		const { ristoranteId, piatti } = req.body;
 
 		// calcolo prezzo tot
@@ -36,7 +33,7 @@ router.post("/", validaNuovoOrdine, async (req, res, next) => {
 		});
 
 		const tempoBase = 10;
-		const tempoPerOrdineExtra = 5;
+		const tempoPerOrdineExtra = 2;
 		const tempoAttesaStimato = tempoBase + (ordiniInCoda * tempoPerOrdineExtra);
 
 		// creazione ordine
@@ -94,14 +91,9 @@ router.get("/ristorante", soloRistoratori, async (req, res, next) => {
 });
 
 // PUT aggiorna stato ordine
-router.put("/:id/stato", soloRistoratori, async (req, res, next) => {
+router.put("/:id/stato", soloRistoratori, validaIdMongo, validaStatoOrdine, async (req, res, next) => {
 	try {
 		const { stato } = req.body;
-
-		const statiValidi = ['ordinato', 'in preparazione', 'consegnato'];
-		if (!statiValidi.includes(stato)) {
-			return res.status(400).json({ message: "Stato ordine non valido." });
-		}
 
 		const ordineAggiornato = await schemaOrdine.findByIdAndUpdate(
 			req.params.id,
