@@ -1,7 +1,8 @@
 import express from "express";
 import mongoose from "mongoose";
 import schemaRistorante from "../models/ristorante.js";
-import { validaIdMongo } from "../middlewares/validations.js";
+import schemaUtente from "../models/user.js";
+import {validaIdMongo, verificaToken} from "../middlewares/validations.js";
 
 const router = express.Router();
 
@@ -25,6 +26,25 @@ router.get("/", async (req, res, next) => {
 		const ristoranti = await operazioneDb;
 
 		res.json(ristoranti);
+	} catch (error) {
+		next(error);
+	}
+});
+
+// GET ristoranti consigliati
+router.get("/consigliati", verificaToken, async (req, res, next) => {
+	try {
+		const utente = await schemaUtente.findById(req.utenteLoggato.idUtente);
+
+		if (!utente || !utente.preferenze || utente.preferenze.length === 0) {
+			return res.json([]);
+		}
+
+		const ristorantiConsigliati = await schemaRistorante.find({
+			"menu.strCategory": { $in: utente.preferenze }
+		}).limit(3);
+
+		res.json(ristorantiConsigliati);
 	} catch (error) {
 		next(error);
 	}

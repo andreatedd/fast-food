@@ -182,31 +182,23 @@
 		}
 	}
 
-	async function elaboraConsigliati() {
+async function elaboraConsigliati() {
 		try {
-			const res = await fetch('http://localhost:3000/api/utenti/me', {
+			const response = await fetch('http://localhost:3000/api/ristoranti/consigliati', {
 				headers: {'Authorization': `Bearer ${token}`}
 			});
-			if (!res.ok) return;
-			const utente = await res.json();
 
-			if (utente.preferenze && utente.preferenze.length > 0) {
-				const preferenzeCliente = utente.preferenze;
+			if (!response.ok) return;
 
-				// Troviamo i ristoranti che hanno ALMENO UN piatto che corrisponde alle preferenze
-				const ristorantiConsigliati = ristorantiDB.filter(ristorante => {
-					if (!ristorante.menu || ristorante.menu.length === 0) return false;
-					return ristorante.menu.some(piatto => preferenzeCliente.includes(piatto.strCategory));
-				});
+			const ristorantiConsigliati = await response.json();
 
-				// Se ci sono, mostra max 3 consigliati
-				if (ristorantiConsigliati.length > 0) {
-					document.getElementById('sezione-consigliati').classList.remove('d-none');
-					mostraRistoranti(ristorantiConsigliati.slice(0, 3), 'griglia-consigliati');
-				}
+			// Se il backend ci restituisce qualcosa, mostriamo la griglia
+			if (ristorantiConsigliati.length > 0) {
+				document.getElementById('sezione-consigliati').classList.remove('d-none');
+				mostraRistoranti(ristorantiConsigliati, 'griglia-consigliati');
 			}
 		} catch (err) {
-			console.error("Errore durante il calcolo dei consigliati:", err);
+			console.error("Errore: ", err);
 		}
 	}
 
