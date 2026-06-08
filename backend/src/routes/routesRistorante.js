@@ -43,6 +43,9 @@ router.put("/me", validaDatiRistorante, async (req, res, next) => {
 
 		res.json(updated);
 	} catch (error) {
+		if (error.code === 11000) {
+			return res.status(409).json({ message: "Email o Partita IVA già in uso." });
+		}
 		next(error);
 	}
 });

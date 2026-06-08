@@ -55,7 +55,7 @@ router.put("/me", validaAggiornamentoUtente, async (req, res, next) => {
 
 	} catch (error) {
 		if (error.code === 11000) {
-			return res.status(409).json({ message: "Questa email è già in uso da un altro account." });
+			return res.status(409).json({ message: "Email già in uso." });
 		}
 		next(error);
 	}

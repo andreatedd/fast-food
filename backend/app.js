@@ -30,30 +30,15 @@ app.use("/api/ordini", routesOrdini);
 
 // Middleware per gestione errori
 app.use((error, req, res, next) => {
-	console.error("Errore:", error.message);
+    console.error("Errore:", error.message);
 
-	// Errore validazione dati
-	if (error.name === 'ValidationError') {
-		return res.status(400).json({
-			status: "fail",
-			message: "I dati inseriti non sono validi o sono incompleti.",
-			dettagli: error.message
-		});
-	}
+    // Gestione errore personalizzato (se hai passato uno status)
+    const statusCode = error.status || 500;
 
-	// Dati duplicati
-	if (error.code === 11000) {
-		return res.status(409).json({
-			status: "fail",
-			message: "Dati duplicati"
-		});
-	}
-
-	// Altri errori
-	return res.status(500).json({
-		status: "error",
-		message: "Errore interno del server. Riprovare più tardi."
-	});
+    return res.status(statusCode).json({
+       status: "error",
+       message: error.message || "Errore interno del server."
+    });
 });
 
 app.listen(PORT, () => {
