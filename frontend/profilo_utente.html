@@ -288,6 +288,8 @@
 					esci();
 					return;
 				}
+				mostraMessaggio(risultato.message || "Impossibile caricare i dati", "danger");
+				return;
 			}
 
 			mostraMessaggio("Profilo aggiornato con successo!", "success");

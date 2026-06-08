@@ -9,23 +9,29 @@ const router = express.Router();
 // GET ristoranti
 router.get("/", async (req, res, next) => {
 	try {
-		const {nome, luogo} = req.query;
+		const { nome, luogo, page = "1", limit = "6" } = req.query;
 		let query = {};
 
-		if (nome) query.nome = {$regex: nome, $options: "i"};
-		if (luogo) query.indirizzo = {$regex: luogo, $options: "i"};
+		if (nome) query.nome = { $regex: nome, $options: "i" };
+		if (luogo) query.indirizzo = { $regex: luogo, $options: "i" };
 
-		let operazioneDb = schemaRistorante.find(query);
+		const pageNum = parseInt(page, 10);
+		const limitNum = parseInt(limit, 10);
+		const skip = (pageNum - 1) * limitNum;
 
-		// all'inizio limitiamo i risultati a 6
-		if (!nome && !luogo) {
-			operazioneDb = operazioneDb.limit(6);
-		}
+		const totalRistoranti = await schemaRistorante.countDocuments(query);
+		const totalPages = Math.ceil(totalRistoranti / limitNum);
 
-		// Eseguiamo la query finale
-		const ristoranti = await operazioneDb;
+		const ristoranti = await schemaRistorante.find(query)
+			.skip(skip)
+			.limit(limitNum);
 
-		res.json(ristoranti);
+		res.json({
+			ristoranti,
+			currentPage: pageNum,
+			totalPages,
+			totalRistoranti
+		});
 	} catch (error) {
 		next(error);
 	}

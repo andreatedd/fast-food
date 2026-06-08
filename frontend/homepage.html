@@ -100,6 +100,10 @@
 	</div>
 
 	<div class="row g-4" id="griglia-ristoranti"></div>
+	<nav aria-label="Navigazione pagine" class="mt-5 d-none" id="paginazione-container">
+		<ul class="pagination justify-content-center" id="paginazione-lista">
+		</ul>
+	</nav>
 </div>
 
 <template id="modello-card-ristorante">
@@ -157,57 +161,100 @@
 		window.location.reload();
 	}
 
-	let ristorantiDB = [];
-
-	async function caricaRistoranti() {
+	async function caricaRistoranti(page = 1, searchQuery = "") {
 		try {
-			const response = await fetch('http://localhost:3000/api/ristoranti');
+			// Costruiamo l'URL passando la pagina e i filtri di ricerca
+			const url = `http://localhost:3000/api/ristoranti?page=${page}&limit=6${searchQuery}`;
+			const response = await fetch(url);
 
 			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
 				document.getElementById('griglia-ristoranti').innerHTML =
-					`<div class="alert alert-warning w-100 text-center">Errore del server (${response.status}). Riprova più tardi.</div>`;
+					`<div class="alert alert-warning w-100 text-center">Errore: ${errorData.message || response.statusText}. Riprova più tardi.</div>`;
 				return;
 			}
 
-			ristorantiDB = await response.json();
-			if (token && ruolo === 'cliente') {
+			// Leggiamo il nuovo oggetto strutturato
+			const dati = await response.json();
+
+			// Mostriamo i consigliati SOLO se siamo in Homepage pura (pagina 1, niente ricerche)
+			if (token && ruolo === 'cliente' && page === 1 && searchQuery === "") {
 				await elaboraConsigliati();
+			} else if (searchQuery !== "") {
+				document.getElementById('sezione-consigliati').classList.add('d-none');
 			}
-			mostraRistoranti(ristorantiDB, 'griglia-ristoranti');
+
+			mostraRistoranti(dati.ristoranti, 'griglia-ristoranti');
+			creaPaginazione(dati.currentPage, dati.totalPages, searchQuery);
 
 		} catch (error) {
 			console.error("Errore di connessione:", error);
 			document.getElementById('griglia-ristoranti').innerHTML =
-				'<div class="alert alert-danger w-100 text-center">Impossibile connettersi al server. Assicurati che il backend sia acceso.</div>';
+				'<div class="alert alert-danger w-100 text-center">Impossibile connettersi al server.</div>';
 		}
 	}
 
-async function elaboraConsigliati() {
+	function creaPaginazione(currentPage, totalPages, searchQuery) {
+		const container = document.getElementById('paginazione-container');
+		const lista = document.getElementById('paginazione-lista');
+		lista.innerHTML = '';
+
+		// Nasconde la barra se c'è solo una pagina o zero ristoranti
+		if (totalPages <= 1) {
+			container.classList.add('d-none');
+			return;
+		}
+
+		container.classList.remove('d-none');
+
+		// Tasto "Precedente"
+		const liPrev = document.createElement('li');
+		liPrev.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+		liPrev.innerHTML = `<button class="page-link text-danger" onclick="caricaRistoranti(${currentPage - 1}, '${searchQuery}')">&laquo; Precedente</button>`;
+		lista.appendChild(liPrev);
+
+		// Generazione dei numeri (1, 2, 3...)
+		for (let i = 1; i <= totalPages; i++) {
+			const li = document.createElement('li');
+			li.className = `page-item ${currentPage === i ? 'active' : ''}`;
+
+			// Selezioniamo il colore del bottone attivo (Rosso Bootstrap)
+			const cssClasse = currentPage === i ? 'bg-danger border-danger text-white' : 'text-danger';
+			li.innerHTML = `<button class="page-link ${cssClasse}" onclick="caricaRistoranti(${i}, '${searchQuery}')">${i}</button>`;
+			lista.appendChild(li);
+		}
+
+		// Tasto "Successivo"
+		const liNext = document.createElement('li');
+		liNext.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+		liNext.innerHTML = `<button class="page-link text-danger" onclick="caricaRistoranti(${currentPage + 1}, '${searchQuery}')">Successivo &raquo;</button>`;
+		lista.appendChild(liNext);
+	}
+
+	// Funzione consigliati (RIMANE IDENTICA A QUELLA CHE HAI GIA' INSERITO)
+	async function elaboraConsigliati() {
 		try {
 			const response = await fetch('http://localhost:3000/api/ristoranti/consigliati', {
 				headers: {'Authorization': `Bearer ${token}`}
 			});
-
 			if (!response.ok) return;
-
 			const ristorantiConsigliati = await response.json();
 
-			// Se il backend ci restituisce qualcosa, mostriamo la griglia
 			if (ristorantiConsigliati.length > 0) {
 				document.getElementById('sezione-consigliati').classList.remove('d-none');
 				mostraRistoranti(ristorantiConsigliati, 'griglia-consigliati');
 			}
 		} catch (err) {
-			console.error("Errore: ", err);
+			console.error("Dettaglio errore tecnico consigliati:", err);
 		}
 	}
 
+	// Mostra Ristoranti (Modificata leggermente per gestire il reset interno della griglia)
 	function mostraRistoranti(ristorantiDaMostrare, targetId) {
 		const griglia = document.getElementById(targetId);
 		const template_rist = document.getElementById('modello-card-ristorante');
 		griglia.innerHTML = '';
 
-		// Mostriamo l'alert "Nessun risultato" SOLO per la griglia di ricerca
 		if (targetId === 'griglia-ristoranti') {
 			const alertNessunRisultato = document.getElementById('nessun-risultato');
 			if (ristorantiDaMostrare.length === 0) {
@@ -246,42 +293,25 @@ async function elaboraConsigliati() {
 		});
 	}
 
-	document.addEventListener('DOMContentLoaded', caricaRistoranti);
+	// Avvia il caricamento iniziale
+	document.addEventListener('DOMContentLoaded', () => caricaRistoranti(1, ""));
 
 	// Gestione Ricerca
-	document.getElementById('formRicerca').addEventListener('submit', async function (event) {
+	document.getElementById('formRicerca').addEventListener('submit', function (event) {
 		event.preventDefault();
 		const tipoRicerca = document.getElementById('tipoRicerca').value;
 		const testoCercato = document.getElementById('testoRicerca').value.trim();
-		let url = 'http://localhost:3000/api/ristoranti';
 
+		let searchQuery = "";
 		if (testoCercato !== "") {
-			url += `?${tipoRicerca}=${encodeURIComponent(testoCercato)}`;
-			// nasconde consigliati
-			document.getElementById('sezione-consigliati').classList.add('d-none');
+			searchQuery = `&${tipoRicerca}=${encodeURIComponent(testoCercato)}`;
+			document.getElementById('titolo-risultati').textContent = `Risultati per: "${testoCercato}"`;
 		} else {
-			if (document.getElementById('griglia-consigliati').innerHTML.trim() !== "") {
-				document.getElementById('sezione-consigliati').classList.remove('d-none');
-			}
+			document.getElementById('titolo-risultati').textContent = "Ristoranti in Evidenza";
 		}
 
-		try {
-			const response = await fetch(url);
-			const risultatiMongoDB = await response.json();
-			if (!response.ok) {
-				document.getElementById('griglia-ristoranti').innerHTML = `<div class="alert alert-warning w-100 text-center">Errore ${response.status}.</div>`;
-				return;
-			}
-			if (testoCercato !== "") {
-				document.getElementById('titolo-risultati').textContent = `Risultati per: "${testoCercato}"`;
-			} else {
-				document.getElementById('titolo-risultati').textContent = "Ristoranti in Evidenza";
-			}
-			mostraRistoranti(risultatiMongoDB, 'griglia-ristoranti');
-		} catch (error) {
-			console.error("Errore:", error);
-			alert("Impossibile connettersi al server per la ricerca.");
-		}
+		// Ricarichiamo da Pagina 1 passando la stringa di ricerca!
+		caricaRistoranti(1, searchQuery);
 	});
 
 	// Tasto Reset Ricerca
@@ -289,11 +319,9 @@ async function elaboraConsigliati() {
 		e.preventDefault();
 		document.getElementById('formRicerca').reset();
 		document.getElementById('titolo-risultati').textContent = "Ristoranti in Evidenza";
-		mostraRistoranti(ristorantiDB, 'griglia-ristoranti');
-		// ripristina consigliati
-		if (document.getElementById('griglia-consigliati').innerHTML.trim() !== "") {
-			document.getElementById('sezione-consigliati').classList.remove('d-none');
-		}
+
+		// Ricarichiamo pagina 1 pulita!
+		caricaRistoranti(1, "");
 	});
 </script>
 </body>
