@@ -37,7 +37,6 @@ app.use("/api/ordini", routesOrdini);
 app.use((error, req, res, next) => {
     console.error("Errore:", error.message);
 
-    // Gestione errore personalizzato (se hai passato uno status)
     const statusCode = error.status || 500;
 
     return res.status(statusCode).json({
