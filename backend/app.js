@@ -1,5 +1,7 @@
 import "dotenv/config";
 import dns from "dns";
+import swaggerUi from "swagger-ui-express";
+import fs from "fs";
 
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
 import express from "express";
@@ -20,6 +22,9 @@ app.use(cors());
 app.use(express.json());
 
 await connectDB();
+
+const swaggerDocument = JSON.parse(fs.readFileSync('./swagger.json', 'utf-8'));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/api/ristoranti", routesClienti);
 app.use("/api/utenti", routesUtente);
