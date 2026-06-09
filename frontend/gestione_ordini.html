@@ -21,12 +21,7 @@
 		<div class="collapse navbar-collapse" id="navbarNav">
 			<div class="ms-auto d-flex align-items-center mt-2 mt-lg-0">
 
-				<div id="nav-guest" class="d-flex w-100">
-					<a href="auth.html" class="btn btn-light text-danger fw-bold w-100 shadow-sm">Accedi /
-						Registrati</a>
-				</div>
-
-				<div id="nav-user" class="d-flex d-none gap-2 w-100">
+				<div id="nav-user" class="d-flex gap-2 w-100">
 					<a href="homepage.html" class="btn btn-outline-light btn-sm d-flex align-items-center"><i
 							class="bi bi-house me-1"></i> Home</a>
 
@@ -36,6 +31,14 @@
 							<i class="bi bi-person-circle me-1"></i> Area Personale
 						</button>
 						<ul class="dropdown-menu dropdown-menu-end shadow" id="nav-menu-dropdown">
+							<li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-shop me-2"></i> Gestione
+								Menù</a></li>
+							<li><a class="dropdown-item" href="gestione_ordini.html"><i class="bi bi-receipt me-2"></i>
+								Ordini Ricevuti</a></li>
+							<li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i>
+								Profilo Personale</a></li>
+							<li><a class="dropdown-item" href="crea_ristorante.html"><i class="bi bi-gear me-2"></i>
+								Impostazioni Locale</a></li>
 						</ul>
 					</div>
 
@@ -120,31 +123,6 @@
 	if (!token || ruolo !== 'ristoratore') {
 		window.location.replace('auth.html');
 	}
-
-	document.addEventListener('DOMContentLoaded', () => {
-		const navGuest = document.getElementById('nav-guest');
-		const navUser = document.getElementById('nav-user');
-		const menuDropdown = document.getElementById('nav-menu-dropdown');
-
-		if (token && ruolo) {
-			navGuest.classList.add('d-none');
-			navUser.classList.remove('d-none');
-
-			if (ruolo === 'cliente') {
-				menuDropdown.innerHTML = `
-					<li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Il mio Profilo</a></li>
-					<li><a class="dropdown-item" href="storico_ordini.html"><i class="bi bi-bag-check me-2"></i> I miei Ordini</a></li>
-				`;
-			} else if (ruolo === 'ristoratore') {
-				menuDropdown.innerHTML = `
-					<li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-shop me-2"></i> Gestione Menù</a></li>
-					<li><a class="dropdown-item" href="gestione_ordini.html"><i class="bi bi-receipt me-2"></i> Ordini Ricevuti</a></li>
-					<li><a class="dropdown-item" href="profilo_utente.html"><i class="bi bi-person me-2"></i> Profilo Personale</a></li>
-					<li><a class="dropdown-item" href="crea_ristorante.html"><i class="bi bi-gear me-2"></i> Impostazioni Locale</a></li>
-				`;
-			}
-		}
-	});
 
 	function esci() {
 		localStorage.removeItem('token');
@@ -330,7 +308,7 @@
 	document.querySelector('button[onclick="caricaOrdini()"]').onclick = (e) => {
 		e.preventDefault();
 		const tabAttiva = document.querySelector('.nav-link.active').id;
-		if(tabAttiva === 'tab-attivi') {
+		if (tabAttiva === 'tab-attivi') {
 			caricaOrdini('attivi');
 		} else {
 			caricaOrdini('storico');

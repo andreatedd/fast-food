@@ -17,7 +17,7 @@ router.post("/signup", validaRegistrazione, async (req, res, next) => {
 			cognome,
 			email,
 			password: passwordCriptata,
-			ruolo: ruolo,
+			ruolo,
 			metodoPagamento: metodoPagamento || 'nessuno',
 			preferenze: preferenze || []
 		});
