@@ -20,11 +20,31 @@ router.post("/", soloClienti, validaNuovoOrdine, async (req, res, next) => {
 	try {
 		const { ristoranteId, piatti } = req.body;
 
-		// calcolo prezzo tot
+		// leggiamo prezzi dal db
+		const ristoranteDb = await schemaRistorante.findById(ristoranteId);
+		if (!ristoranteDb) {
+			return res.status(404).json({ message: "Ristorante non trovato" });
+		}
+
 		let totale = 0;
-		piatti.forEach(piatto => {
-			totale += (piatto.prezzo * piatto.quantita);
-		});
+		const piattiVerificati = [];
+
+		for (let item of piatti) {
+			const piatto = ristoranteDb.menu.find(p => p.strMeal === item.nome);
+
+			if (!piatto) {
+				return res.status(400).json({ message: `Il piatto ${item.nome} non è disponibile.` });
+			}
+
+			totale += (piatto.prezzo * item.quantita);
+
+			// Costruiamo l'array con i dati puliti
+			piattiVerificati.push({
+				nome: piatto.strMeal,
+				prezzo: piatto.prezzo,
+				quantita: item.quantita
+			});
+		}
 
 		// calcolo tempo attesa
 		const ordiniInCoda = await schemaOrdine.countDocuments({
@@ -36,11 +56,10 @@ router.post("/", soloClienti, validaNuovoOrdine, async (req, res, next) => {
 		const tempoPerOrdineExtra = 2;
 		const tempoAttesaStimato = tempoBase + (ordiniInCoda * tempoPerOrdineExtra);
 
-		// creazione ordine
 		const nuovoOrdine = await schemaOrdine.create({
 			cliente: req.utenteLoggato.idUtente,
 			ristorante: ristoranteId,
-			piatti: piatti,
+			piatti: piattiVerificati,
 			totale: totale,
 			tempoAttesaStimato: tempoAttesaStimato
 		});

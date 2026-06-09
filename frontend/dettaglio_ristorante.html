@@ -462,7 +462,7 @@
 			bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasCarrello')).hide();
 
 			// 3. Mostriamo il messaggio di trionfo usando la modale del browser (che calcola anche i minuti dal backend!)
-			alert(`🎉 Ordine confermato con successo!\n\nIl ristorante ha ricevuto il tuo ordine.\nTempo di attesa stimato: ${risultato.ordine.tempoAttesaStimato} minuti.`);
+			alert(`Ordine confermato con successo!\n\nIl ristorante ha ricevuto il tuo ordine.\nTempo di attesa stimato: ${risultato.ordine.tempoAttesaStimato} minuti.`);
 
 		} catch (error) {
 			alertBox.className = "alert alert-danger text-center small";
