@@ -19,7 +19,7 @@ const schemaRistorante = new Schema({
 		type: Schema.Types.ObjectId,
 		ref: "User",
 		required: true,
-		index: true
+		unique: true
 	},
 	nome: {type: String, required: true, trim: true, index: true},
 	partitaIva: {type: String, required: true, unique: true},
