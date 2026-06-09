@@ -98,8 +98,16 @@ router.get("/ristorante", soloRistoratori, async (req, res, next) => {
 			return res.status(404).json({ message: "Devi prima configurare il tuo locale!" });
 		}
 
-		// trova ordini in corso
-		const ordini = await schemaOrdine.find({ ristorante: mioRistorante._id })
+		let queryDb = { ristorante: mioRistorante._id };
+
+		// filtri se richiesti dal frontend
+		if (req.query.filtro === 'attivi') {
+			queryDb.stato = { $in: ['ordinato', 'in preparazione'] };
+		} else if (req.query.filtro === 'storico') {
+			queryDb.stato = 'consegnato';
+		}
+
+		const ordini = await schemaOrdine.find(queryDb)
 			.populate('cliente', 'nome cognome email')
 			.sort({ createdAt: -1 });
 

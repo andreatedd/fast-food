@@ -22,21 +22,26 @@
 			<div class="ms-auto d-flex align-items-center mt-2 mt-lg-0">
 
 				<div id="nav-guest" class="d-flex w-100">
-					<a href="auth.html" class="btn btn-light text-danger fw-bold w-100 shadow-sm">Accedi / Registrati</a>
+					<a href="auth.html" class="btn btn-light text-danger fw-bold w-100 shadow-sm">Accedi /
+						Registrati</a>
 				</div>
 
 				<div id="nav-user" class="d-flex d-none gap-2 w-100">
-					<a href="homepage.html" class="btn btn-outline-light btn-sm d-flex align-items-center"><i class="bi bi-house me-1"></i> Home</a>
+					<a href="homepage.html" class="btn btn-outline-light btn-sm d-flex align-items-center"><i
+							class="bi bi-house me-1"></i> Home</a>
 
 					<div class="dropdown flex-grow-1">
-						<button class="btn btn-outline-light btn-sm dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown">
+						<button class="btn btn-outline-light btn-sm dropdown-toggle w-100 d-flex align-items-center justify-content-center"
+						        type="button" data-bs-toggle="dropdown">
 							<i class="bi bi-person-circle me-1"></i> Area Personale
 						</button>
 						<ul class="dropdown-menu dropdown-menu-end shadow" id="nav-menu-dropdown">
-							</ul>
+						</ul>
 					</div>
 
-					<button class="btn btn-light text-danger btn-sm fw-bold shadow-sm" onclick="esci()"><i class="bi bi-box-arrow-right d-lg-none"></i><span class="d-none d-lg-inline"> Esci</span></button>
+					<button class="btn btn-light text-danger btn-sm fw-bold shadow-sm" onclick="esci()"><i
+							class="bi bi-box-arrow-right d-lg-none"></i><span class="d-none d-lg-inline"> Esci</span>
+					</button>
 				</div>
 
 			</div>
@@ -153,9 +158,11 @@
 		return new Date(dataString).toLocaleString('it-IT', opzioni);
 	}
 
-	async function caricaOrdini() {
+	async function caricaOrdini(filtro) {
 		try {
-			const response = await fetch('http://localhost:3000/api/ordini/ristorante', {
+			// Costruisci l'URL in base al filtro richiesto
+			const url = `http://localhost:3000/api/ordini/ristorante?filtro=${filtro}`;
+			const response = await fetch(url, {
 				headers: {'Authorization': `Bearer ${token}`}
 			});
 
@@ -165,10 +172,16 @@
 					esci();
 					return;
 				}
+				throw new Error("Errore nel recupero dati");
 			}
 
 			const ordini = await response.json();
-			mostraOrdini(ordini);
+			// Chiama una funzione di rendering specifica in base al filtro
+			if (filtro === 'attivi') {
+				mostraOrdiniAttivi(ordini);
+			} else if (filtro === 'storico') {
+				mostraOrdiniStorico(ordini);
+			}
 
 		} catch (error) {
 			console.error(error);
@@ -176,38 +189,21 @@
 		}
 	}
 
-	// 3. Stampa a schermo degli ordini
-	function mostraOrdini(ordini) {
+	// Funzione per il rendering SOLO degli ordini ATTIVI
+	function mostraOrdiniAttivi(ordini) {
 		const grigliaAttivi = document.getElementById('griglia-ordini-attivi');
-		const grigliaStorico = document.getElementById('griglia-ordini-storico');
 		const template = document.getElementById('modello-card-ordine');
 		const alertNessunAttivo = document.getElementById('nessun-ordine-attivo');
 
 		grigliaAttivi.innerHTML = '';
-		grigliaStorico.innerHTML = '';
-
 		let contatoreAttivi = 0;
 
 		ordini.forEach(ordine => {
 			const clone = template.content.cloneNode(true);
 			const card = clone.querySelector('.card');
 
-			// Intestazione
-			clone.querySelector('.data-ordine').textContent = formattaData(ordine.createdAt);
-			clone.querySelector('.nome-cliente').textContent = ordine.cliente ? `${ordine.cliente.nome} ${ordine.cliente.cognome}` : 'Cliente Eliminato';
-			clone.querySelector('.email-cliente').textContent = ordine.cliente ? ordine.cliente.email : 'N/A';
-			clone.querySelector('.totale-ordine').textContent = `Totale: € ${ordine.totale.toFixed(2)}`;
+			compilaDatiBase(clone, ordine); // Funzione di supporto (vedi giù)
 
-			// Lista piatti
-			const ulPiatti = clone.querySelector('.lista-piatti');
-			ordine.piatti.forEach(piatto => {
-				const li = document.createElement('li');
-				li.className = "d-flex justify-content-between border-bottom pb-1 mb-1";
-				li.innerHTML = `<span><b>${piatto.quantita}x</b> ${piatto.nome}</span> <span>€ ${(piatto.prezzo * piatto.quantita).toFixed(2)}</span>`;
-				ulPiatti.appendChild(li);
-			});
-
-			// Gestione Stati e Bottoni
 			const badge = clone.querySelector('.stato-badge');
 			const contenitoreAzioni = clone.querySelector('.contenitore-azioni');
 
@@ -238,19 +234,9 @@
 				contenitoreAzioni.appendChild(btnConsegna);
 
 				grigliaAttivi.appendChild(clone);
-
-			} else if (ordine.stato === 'consegnato') {
-				card.classList.add('border-secondary');
-				card.classList.add('opacity-75');
-				badge.className = 'badge rounded-pill fs-6 bg-secondary';
-				badge.textContent = 'CONSEGNATO';
-				contenitoreAzioni.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check2-all"></i> Ordine Completato</span>';
-
-				grigliaStorico.appendChild(clone);
 			}
 		});
 
-		// Mostriamo il messaggio di "Vuoto" se non ci sono ordini da preparare
 		if (contatoreAttivi === 0) {
 			alertNessunAttivo.classList.remove('d-none');
 		} else {
@@ -258,7 +244,48 @@
 		}
 	}
 
-	// 4. Cambia stato dell'ordine (PUT)
+	// Funzione per il rendering SOLO dello STORICO
+	function mostraOrdiniStorico(ordini) {
+		const grigliaStorico = document.getElementById('griglia-ordini-storico');
+		const template = document.getElementById('modello-card-ordine');
+		grigliaStorico.innerHTML = '';
+
+		ordini.forEach(ordine => {
+			const clone = template.content.cloneNode(true);
+			const card = clone.querySelector('.card');
+
+			compilaDatiBase(clone, ordine); // Funzione di supporto (vedi giù)
+
+			const badge = clone.querySelector('.stato-badge');
+			const contenitoreAzioni = clone.querySelector('.contenitore-azioni');
+
+			card.classList.add('border-secondary');
+			card.classList.add('opacity-75');
+			badge.className = 'badge rounded-pill fs-6 bg-secondary';
+			badge.textContent = 'CONSEGNATO';
+			contenitoreAzioni.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check2-all"></i> Ordine Completato</span>';
+
+			grigliaStorico.appendChild(clone);
+		});
+	}
+
+	// Funzione helper per non ripetere il codice
+	function compilaDatiBase(clone, ordine) {
+		clone.querySelector('.data-ordine').textContent = formattaData(ordine.createdAt);
+		clone.querySelector('.nome-cliente').textContent = ordine.cliente ? `${ordine.cliente.nome} ${ordine.cliente.cognome}` : 'Cliente Eliminato';
+		clone.querySelector('.email-cliente').textContent = ordine.cliente ? ordine.cliente.email : 'N/A';
+		clone.querySelector('.totale-ordine').textContent = `Totale: € ${ordine.totale.toFixed(2)}`;
+
+		const ulPiatti = clone.querySelector('.lista-piatti');
+		ordine.piatti.forEach(piatto => {
+			const li = document.createElement('li');
+			li.className = "d-flex justify-content-between border-bottom pb-1 mb-1";
+			li.innerHTML = `<span><b>${piatto.quantita}x</b> ${piatto.nome}</span> <span>€ ${(piatto.prezzo * piatto.quantita).toFixed(2)}</span>`;
+			ulPiatti.appendChild(li);
+		});
+	}
+
+	// Cambia stato dell'ordine (PUT) (Rimane invariato, tranne il refresh)
 	async function cambiaStatoOrdine(idOrdine, nuovoStato) {
 		try {
 			const response = await fetch(`http://localhost:3000/api/ordini/${idOrdine}/stato`, {
@@ -276,16 +303,39 @@
 				return;
 			}
 
-			// Ricarica la lista per aggiornare la visualizzazione!
-			await caricaOrdini();
+			// Ricarichiamo SOLO gli ordini attivi, per fluidità!
+			await caricaOrdini('attivi');
 
 		} catch (error) {
 			console.error(error);
 		}
 	}
 
-	// Carica gli ordini all'avvio della pagina
-	document.addEventListener('DOMContentLoaded', caricaOrdini);
+	// all'avvio carica ordini attivi (tab attivi di default)
+	document.addEventListener('DOMContentLoaded', () => {
+		caricaOrdini('attivi');
+	});
+
+	// cambio tab su storico
+	document.getElementById('tab-storico').addEventListener('click', () => {
+		caricaOrdini('storico');
+	});
+
+	// cambio tab su attivi
+	document.getElementById('tab-attivi').addEventListener('click', () => {
+		caricaOrdini('attivi');
+	});
+
+	// aggiornamento
+	document.querySelector('button[onclick="caricaOrdini()"]').onclick = (e) => {
+		e.preventDefault();
+		const tabAttiva = document.querySelector('.nav-link.active').id;
+		if(tabAttiva === 'tab-attivi') {
+			caricaOrdini('attivi');
+		} else {
+			caricaOrdini('storico');
+		}
+	};
 </script>
 </body>
 </html>

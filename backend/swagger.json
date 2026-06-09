@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "FastFood App API",
-    "description": "Documentazione ufficiale delle API per il progetto FastFood",
+    "description": "Documentazione delle API per il progetto FastFood",
     "version": "1.0.0"
   },
   "servers": [
@@ -463,6 +463,9 @@
           },
           "403": {
             "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
           }
         },
         "requestBody": {
@@ -513,6 +516,13 @@
           {
             "name": "authorization",
             "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filtro",
+            "in": "query",
             "schema": {
               "type": "string"
             }

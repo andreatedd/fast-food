@@ -3,7 +3,7 @@ import swaggerAutogen from 'swagger-autogen';
 const doc = {
     info: {
         title: 'FastFood App API',
-        description: 'Documentazione ufficiale delle API per il progetto FastFood',
+        description: 'Documentazione delle API per il progetto FastFood',
         version: '1.0.0'
     },
     servers: [
