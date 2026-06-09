@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<!--Navbar-->
+<!--Navbar semplice-->
 <nav class="navbar navbar-dark bg-danger shadow-sm">
 	<div class="container justify-content-center">
 		<a class="navbar-brand fw-bold fs-3" href="homepage.html">
@@ -50,6 +50,7 @@
 				</div>
 
 				<div class="card-body p-4 pt-0">
+					<!--box messaggi-->
 					<div id="alertBox" class="alert d-none text-center" role="alert"></div>
 
 					<div class="tab-content" id="authTabsContent">
@@ -116,6 +117,24 @@
 										<span class="spinner-border spinner-border-sm text-danger" role="status"></span>
 										<small class="text-muted"> Caricamento categorie...</small>
 									</div>
+									<template id="tpl-categoria">
+										<div class="form-check form-check-inline">
+											<input class="form-check-input preferenza-check" type="checkbox">
+											<label class="form-check-label small"></label>
+										</div>
+									</template>
+
+									<template id="tpl-collapse">
+										<div class="collapse mt-2" id="altrePreferenze"></div>
+										<div class="mt-2">
+											<a class="text-danger small fw-bold text-decoration-none"
+											   data-bs-toggle="collapse" href="#altrePreferenze" role="button"
+											   aria-expanded="false" aria-controls="altrePreferenze"
+											   onclick="this.innerText = this.innerText.includes('Mostra') ? 'Nascondi categorie ▲' : 'Mostra altre categorie ▼'">
+												Mostra altre categorie ▼
+											</a>
+										</div>
+									</template>
 								</div>
 
 								<button type="submit" class="btn btn-danger w-100 py-2 fw-bold">Crea Account</button>
@@ -147,36 +166,41 @@
 		try {
 			const response = await fetch('http://localhost:3000/api/catalogo/categorie');
 			const categorie = await response.json();
+
 			const contenitore = document.getElementById('contenitoreCategorie');
+			const tplCheckbox = document.getElementById('tpl-categoria');
+			const tplCollapse = document.getElementById('tpl-collapse');
+
 			contenitore.innerHTML = '';
 
-			let html = '';
-			const maxVisibili = 4; // mostriamo prime 4 categorie
+			const maxVisibili = 4;  // visualizziamo solo 4 sempre
+
+            // Variabile per tenere traccia di dove stiamo inserendo i checkbox (nel div principale o in quello nascosto)
+			let contenitoreTarget = contenitore;
 
 			categorie.forEach((cat, index) => {
-				const checkboxHtml = `
-				<div class="form-check form-check-inline">
-					<input class="form-check-input preferenza-check" type="checkbox" value="${cat}" id="cat_${index}">
-					<label class="form-check-label small" for="cat_${index}">${cat}</label>
-				</div>`;
-
+                // Se raggiungiamo il limite, creiamo il contenitore nascosto e spostiamo il target lì
 				if (index === maxVisibili) {
-					// Apriamo il Collapse nascosto dalla quinta in poi
-					html += `<div class="collapse mt-2" id="altrePreferenze">`;
+					const cloneCollapse = tplCollapse.content.cloneNode(true);
+					contenitore.appendChild(cloneCollapse);
+					contenitoreTarget = document.getElementById('altrePreferenze');
 				}
-				html += checkboxHtml;
+
+                // creazione singolo checkbox
+				const cloneCheckbox = tplCheckbox.content.cloneNode(true);
+				const input = cloneCheckbox.querySelector('.form-check-input');
+				const label = cloneCheckbox.querySelector('.form-check-label');
+
+				const idUnivoco = `cat_${index}`;
+				input.id = idUnivoco;
+				input.value = cat;
+
+				label.setAttribute('for', idUnivoco);
+				label.textContent = cat;
+
+				contenitoreTarget.appendChild(cloneCheckbox);
 			});
 
-			if (categorie.length > maxVisibili) {
-				html += `</div>`;
-				html += `
-				<div class="mt-2">
-					<a class="text-danger small fw-bold text-decoration-none" data-bs-toggle="collapse" href="#altrePreferenze" role="button" aria-expanded="false" aria-controls="altrePreferenze" onclick="this.innerText = this.innerText.includes('Mostra') ? 'Nascondi categorie ▲' : 'Mostra altre categorie ▼'">
-						Mostra altre categorie ▼
-					</a>
-				</div>`;
-			}
-			contenitore.innerHTML = html;
 		} catch (error) {
 			document.getElementById('contenitoreCategorie').innerHTML = '<small class="text-danger">Errore nel caricamento categorie.</small>';
 			console.error("Errore: " + error);
@@ -212,7 +236,7 @@
 			email: document.getElementById('regEmail').value.trim(),
 			password: document.getElementById('regPassword').value,
 			ruolo: document.getElementById('regRuolo').value,
-			// invia campi cliente solo se ruolo === cliente
+			// campi cliente solo se ruolo === cliente
 			metodoPagamento: document.getElementById('regRuolo').value === 'cliente' ? document.getElementById('regPagamento').value : 'nessuno',
 			preferenze: document.getElementById('regRuolo').value === 'cliente' ? preferenzeSelezionate : []
 		};

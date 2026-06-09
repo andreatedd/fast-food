@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 export async function connectDB() {
-	mongoose.set("strictQuery", true);
+	mongoose.set("strictQuery", true);	// salva solo i campi definiti nello schema
 
 	mongoose.connection.on("connected", () => console.log("Mongoose connesso ad Atlas"));
 	mongoose.connection.on("disconnected", () => console.log("Mongoose disconnesso da Atlas"));
