@@ -9,11 +9,11 @@ const router = express.Router();
 // GET ristoranti
 router.get("/", async (req, res, next) => {
 	try {
-		const { nome, luogo, page = "1", limit = "6" } = req.query;
+		const {nome, luogo, page = "1", limit = "6"} = req.query;
 		let query = {};
 
-		if (nome) query.nome = { $regex: nome, $options: "i" };
-		if (luogo) query.indirizzo = { $regex: luogo, $options: "i" };
+		if (nome) query.nome = {$regex: nome, $options: "i"};
+		if (luogo) query.indirizzo = {$regex: luogo, $options: "i"};
 
 		const pageNum = parseInt(page, 10);
 		const limitNum = parseInt(limit, 10);
@@ -23,6 +23,7 @@ router.get("/", async (req, res, next) => {
 		const totalPages = Math.ceil(totalRistoranti / limitNum);
 
 		const ristoranti = await schemaRistorante.find(query)
+			.select("nome indirizzo menu.strCategory menu.strMealThumb")
 			.skip(skip)
 			.limit(limitNum);
 
@@ -47,8 +48,10 @@ router.get("/consigliati", verificaToken, async (req, res, next) => {
 		}
 
 		const ristorantiConsigliati = await schemaRistorante.find({
-			"menu.strCategory": { $in: utente.preferenze }
-		}).limit(3);
+			"menu.strCategory": {$in: utente.preferenze}
+		})
+			.select("nome indirizzo menu.strCategory menu.strMealThumb")
+			.limit(3);
 
 		res.json(ristorantiConsigliati);
 	} catch (error) {
@@ -91,8 +94,7 @@ router.get("/:id/piatti", validaIdMongo, async (req, res, next) => {
 			// Filtri
 			if (mappaCampiTestuali[tipo]) {
 				matchCondizione[mappaCampiTestuali[tipo]] = {$regex: testo, $options: "i"};
-			}
-			else if (tipo === 'prezzo') {
+			} else if (tipo === 'prezzo') {
 				const prezzoMax = parseFloat(testo);
 				if (!isNaN(prezzoMax)) {
 					matchCondizione["menu.prezzo"] = {$lte: prezzoMax};
