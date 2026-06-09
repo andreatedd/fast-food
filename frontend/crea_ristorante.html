@@ -150,10 +150,13 @@
 					esci();
 					return;
 				}
+				const errore = await response.json().catch(() => ({}));
+				mostraMessaggio("Errore: " + (errore.message || "Impossibile recuperare i dati del ristorante"), "danger");
+				return;
 			}
 			const dati = await response.json();
 
-			// Modifica
+			// se è modifica, popola con i dati
 			if (!dati.nuovo) {
 				document.getElementById('formTitolo').textContent = "Impostazioni Locale";
 				document.getElementById('formSottotitolo').textContent = "Aggiorna le informazioni del tuo ristorante";
@@ -197,10 +200,14 @@
 				body: JSON.stringify(datiRistorante)
 			});
 
-			const risultato = await response.json();
-
 			if (!response.ok) {
-				mostraMessaggio("Errore: " + (risultato.message || "Dati non validi"), "danger");
+				if (response.status === 401) {
+					alert("Sessione scaduta. Effettua nuovamente l'accesso.");
+					esci();
+					return;
+				}
+				const errore = await response.json().catch(() => ({}));
+				mostraMessaggio("Errore: " + (errore.message || "Impossibile salvare le modifiche"), "danger");
 				return;
 			}
 
