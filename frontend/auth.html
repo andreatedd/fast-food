@@ -203,7 +203,7 @@
 
 		} catch (error) {
 			document.getElementById('contenitoreCategorie').innerHTML = '<small class="text-danger">Errore nel caricamento categorie.</small>';
-			console.error("Errore: " + error);
+			console.error("Errore: ", error);
 		}
 	}
 
@@ -264,7 +264,7 @@
 			}, 500);
 		} catch (error) {
 			mostraMessaggio("Impossibile connettersi al server.", "danger");
-			console.error("Errore: " + error);
+			console.error("Errore: ", error);
 		}
 	});
 
@@ -306,7 +306,7 @@
 
 		} catch (error) {
 			mostraMessaggio("Impossibile connettersi al server.", "danger");
-			console.error("Errore: " + error);
+			console.error("Errore: ", error);
 		}
 	});
 </script>
