@@ -52,14 +52,21 @@
 	</div>
 </nav>
 
-<div class="container mt-5">
+<div class="container my-5">
 	<div class="d-flex justify-content-between align-items-center mb-4">
-		<h2 class="fw-bold">Ordini in arrivo</h2>
+		<h2 class="fw-bold">Ordini</h2>
 		<button class="btn btn-outline-secondary" onclick="caricaOrdini()">
 			<i class="bi bi-arrow-clockwise"></i> Aggiorna
 		</button>
 	</div>
 
+	<!--Alertbox per errori-->
+	<div id="alertBox" class="alert alert-danger text-center d-none shadow-sm rounded-4 border-0" role="alert">
+		<i class="bi bi-exclamation-triangle-fill me-2"></i>
+		<span id="testoAlert"></span>
+	</div>
+
+	<!--Tab ordini e storico-->
 	<ul class="nav nav-tabs mb-4" id="filtriOrdini" role="tablist">
 		<li class="nav-item" role="presentation">
 			<button class="nav-link active text-danger fw-bold" id="tab-attivi" data-bs-toggle="tab"
@@ -74,6 +81,7 @@
 	</ul>
 
 	<div class="tab-content" id="ordiniTabContent">
+		<!--tab ordini-->
 		<div class="tab-pane fade show active" id="attivi" role="tabpanel">
 			<div id="nessun-ordine-attivo"
 			     class="alert alert-success text-center d-none rounded-4 border-0 shadow-sm py-5">
@@ -83,13 +91,14 @@
 			</div>
 			<div class="row g-4" id="griglia-ordini-attivi"></div>
 		</div>
-
+		<!--tab storico-->
 		<div class="tab-pane fade" id="storico" role="tabpanel">
 			<div class="row g-4" id="griglia-ordini-storico"></div>
 		</div>
 	</div>
 </div>
 
+<!--Template ordine-->
 <template id="modello-card-ordine">
 	<div class="col-md-6 col-lg-4">
 		<div class="card h-100 shadow-sm border-0 rounded-4 border-top border-4">
@@ -108,10 +117,31 @@
 
 				<h5 class="text-end fw-bold text-success mb-0 totale-ordine"></h5>
 			</div>
+
 			<div class="card-footer bg-white border-0 pb-4 text-center contenitore-azioni">
+				<button class="btn btn-danger w-100 fw-bold shadow-sm btn-prepara d-none">
+					<i class="bi bi-fire me-2"></i> Inizia Preparazione
+				</button>
+				<button class="btn btn-success w-100 fw-bold shadow-sm btn-consegna d-none">
+					<i class="bi bi-box-seam-fill me-2"></i> Segna come Consegnato
+				</button>
+				<span class="text-success fw-bold testo-completato d-none">
+                <i class="bi bi-check2-all"></i> Ordine Completato
+             </span>
 			</div>
 		</div>
 	</div>
+</template>
+
+<!--template piatto di un ordine-->
+<template id="modello-riga-piatto">
+	<li class="d-flex justify-content-between border-bottom pb-1 mb-1">
+        <span>
+            <b class="quantita-piatto"></b>
+            <span class="nome-piatto"></span>
+        </span>
+		<span class="prezzo-totale-piatto"></span>
+	</li>
 </template>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -119,6 +149,7 @@
 <script>
 	const token = localStorage.getItem('token');
 	const ruolo = localStorage.getItem('ruolo');
+	let filtroCorrente = 'attivi';
 
 	if (!token || ruolo !== 'ristoratore') {
 		window.location.replace('auth.html');
@@ -130,16 +161,34 @@
 		window.location.replace('auth.html');
 	}
 
-	// Formattazione data
+	function mostraErrore(messaggio) {
+		const alertBox = document.getElementById('alertBox');
+		const testoAlert = document.getElementById('testoAlert');
+
+		if (messaggio) {
+			testoAlert.textContent = messaggio;
+			alertBox.classList.remove('d-none');
+			// scorre in alto per renderlo subito visibile
+			window.scrollTo({top: 0, behavior: 'smooth'});
+		} else {
+			alertBox.classList.add('d-none');
+		}
+	}
+
 	function formattaData(dataString) {
 		const opzioni = {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'};
 		return new Date(dataString).toLocaleString('it-IT', opzioni);
 	}
 
 	async function caricaOrdini(filtro) {
+		const filtroDaUsare = filtro || filtroCorrente; // se viene passato un filtro, usalo, altrimenti usa quello corrente
+		if (filtro) {
+			filtroCorrente = filtro; // aggiorna il filtro corrente
+		}
+
+		mostraErrore(null); // nascondi eventuale errore precedente
 		try {
-			// Costruisci l'URL in base al filtro richiesto
-			const url = `http://localhost:3000/api/ordini/ristorante?filtro=${filtro}`;
+			const url = `http://localhost:3000/api/ordini/ristorante?filtro=${filtroDaUsare}`;
 			const response = await fetch(url, {
 				headers: {'Authorization': `Bearer ${token}`}
 			});
@@ -150,40 +199,41 @@
 					esci();
 					return;
 				}
-				throw new Error("Errore nel recupero dati");
+				const errorData = await response.json().catch(() => ({}));
+				mostraErrore(errorData.message || "Impossibile caricare gli ordini.");
+				console.error(errorData);
+				return;
 			}
 
 			const ordini = await response.json();
-			// Chiama una funzione di rendering specifica in base al filtro
-			if (filtro === 'attivi') {
+			if (filtroDaUsare === 'attivi') {
 				mostraOrdiniAttivi(ordini);
-			} else if (filtro === 'storico') {
+			} else if (filtroDaUsare === 'storico') {
 				mostraOrdiniStorico(ordini);
 			}
 
 		} catch (error) {
-			console.error(error);
-			alert("Errore di connessione al server.");
+			console.error("Errore: ", error);
+			mostraErrore("Errore di connessione al server.");
 		}
 	}
 
-	// Funzione per il rendering SOLO degli ordini ATTIVI
 	function mostraOrdiniAttivi(ordini) {
 		const grigliaAttivi = document.getElementById('griglia-ordini-attivi');
-		const template = document.getElementById('modello-card-ordine');
+		const templateOrdine = document.getElementById('modello-card-ordine');
 		const alertNessunAttivo = document.getElementById('nessun-ordine-attivo');
 
 		grigliaAttivi.innerHTML = '';
 		let contatoreAttivi = 0;
 
 		ordini.forEach(ordine => {
-			const clone = template.content.cloneNode(true);
+			const clone = templateOrdine.content.cloneNode(true);
 			const card = clone.querySelector('.card');
-
-			compilaDatiBase(clone, ordine); // Funzione di supporto (vedi giù)
-
 			const badge = clone.querySelector('.stato-badge');
-			const contenitoreAzioni = clone.querySelector('.contenitore-azioni');
+			const btnPrepara = clone.querySelector('.btn-prepara');
+			const btnConsegna = clone.querySelector('.btn-consegna');
+
+			compilaDatiBase(clone, ordine);
 
 			if (ordine.stato === 'ordinato') {
 				contatoreAttivi++;
@@ -191,11 +241,8 @@
 				badge.className = 'badge rounded-pill fs-6 bg-danger';
 				badge.textContent = 'NUOVO ORDINE';
 
-				const btnPrepara = document.createElement('button');
-				btnPrepara.className = 'btn btn-danger w-100 fw-bold shadow-sm';
-				btnPrepara.innerHTML = '<i class="bi bi-fire me-2"></i> Inizia Preparazione';
-				btnPrepara.onclick = () => cambiaStatoOrdine(ordine._id, 'in preparazione');
-				contenitoreAzioni.appendChild(btnPrepara);
+				btnPrepara.classList.remove('d-none');
+				btnPrepara.addEventListener('click', () => cambiaStatoOrdine(ordine._id, 'in preparazione'));
 
 				grigliaAttivi.appendChild(clone);
 
@@ -205,11 +252,8 @@
 				badge.className = 'badge rounded-pill fs-6 bg-warning text-dark';
 				badge.textContent = 'IN PREPARAZIONE';
 
-				const btnConsegna = document.createElement('button');
-				btnConsegna.className = 'btn btn-success w-100 fw-bold shadow-sm';
-				btnConsegna.innerHTML = '<i class="bi bi-box-seam-fill me-2"></i> Segna come Consegnato';
-				btnConsegna.onclick = () => cambiaStatoOrdine(ordine._id, 'consegnato');
-				contenitoreAzioni.appendChild(btnConsegna);
+				btnConsegna.classList.remove('d-none');
+				btnConsegna.addEventListener('click', () => cambiaStatoOrdine(ordine._id, 'consegnato'));
 
 				grigliaAttivi.appendChild(clone);
 			}
@@ -222,7 +266,6 @@
 		}
 	}
 
-	// Funzione per il rendering SOLO dello STORICO
 	function mostraOrdiniStorico(ordini) {
 		const grigliaStorico = document.getElementById('griglia-ordini-storico');
 		const template = document.getElementById('modello-card-ordine');
@@ -231,40 +274,41 @@
 		ordini.forEach(ordine => {
 			const clone = template.content.cloneNode(true);
 			const card = clone.querySelector('.card');
-
-			compilaDatiBase(clone, ordine); // Funzione di supporto (vedi giù)
-
 			const badge = clone.querySelector('.stato-badge');
-			const contenitoreAzioni = clone.querySelector('.contenitore-azioni');
+			const testoCompletato = clone.querySelector('.testo-completato');
 
-			card.classList.add('border-secondary');
-			card.classList.add('opacity-75');
+			compilaDatiBase(clone, ordine);
+
+			card.classList.add('border-secondary', 'opacity-75');
 			badge.className = 'badge rounded-pill fs-6 bg-secondary';
 			badge.textContent = 'CONSEGNATO';
-			contenitoreAzioni.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check2-all"></i> Ordine Completato</span>';
+			testoCompletato.classList.remove('d-none');
 
 			grigliaStorico.appendChild(clone);
 		});
 	}
 
-	// Funzione helper per non ripetere il codice
 	function compilaDatiBase(clone, ordine) {
 		clone.querySelector('.data-ordine').textContent = formattaData(ordine.createdAt);
 		clone.querySelector('.nome-cliente').textContent = ordine.cliente ? `${ordine.cliente.nome} ${ordine.cliente.cognome}` : 'Cliente Eliminato';
 		clone.querySelector('.email-cliente').textContent = ordine.cliente ? ordine.cliente.email : 'N/A';
 		clone.querySelector('.totale-ordine').textContent = `Totale: € ${ordine.totale.toFixed(2)}`;
 
-		const ulPiatti = clone.querySelector('.lista-piatti');
+		const listaPiatti = clone.querySelector('.lista-piatti');
+		const templatePiatto = document.getElementById('modello-riga-piatto');
+
 		ordine.piatti.forEach(piatto => {
-			const li = document.createElement('li');
-			li.className = "d-flex justify-content-between border-bottom pb-1 mb-1";
-			li.innerHTML = `<span><b>${piatto.quantita}x</b> ${piatto.nome}</span> <span>€ ${(piatto.prezzo * piatto.quantita).toFixed(2)}</span>`;
-			ulPiatti.appendChild(li);
+			const clonePiatto = templatePiatto.content.cloneNode(true);
+			clonePiatto.querySelector('.quantita-piatto').textContent = `${piatto.quantita}x `;
+			clonePiatto.querySelector('.nome-piatto').textContent = piatto.nome;
+			clonePiatto.querySelector('.prezzo-totale-piatto').textContent = `€ ${(piatto.prezzo * piatto.quantita).toFixed(2)}`;
+
+			listaPiatti.appendChild(clonePiatto);
 		});
 	}
 
-	// Cambia stato dell'ordine (PUT) (Rimane invariato, tranne il refresh)
 	async function cambiaStatoOrdine(idOrdine, nuovoStato) {
+		mostraErrore(null); // nascondi eventuale errore precedente
 		try {
 			const response = await fetch(`http://localhost:3000/api/ordini/${idOrdine}/stato`, {
 				method: 'PUT',
@@ -276,44 +320,36 @@
 			});
 
 			if (!response.ok) {
-				const errorData = await response.json();
-				alert("Errore: " + (errorData.message || "Impossibile aggiornare lo stato."));
+				if (response.status === 401) {
+					alert("Sessione scaduta. Effettua nuovamente l'accesso.");
+					esci();
+					return;
+				}
+				const errorData = await response.json().catch(() => ({}));
+				mostraErrore(errorData.message || "Impossibile aggiornare lo stato dell'ordine.");
+				console.error(errorData);
 				return;
 			}
 
-			// Ricarichiamo SOLO gli ordini attivi, per fluidità!
 			await caricaOrdini('attivi');
 
 		} catch (error) {
-			console.error(error);
+			console.error("Errore: ", error);
+			mostraErrore("Errore di connessione al server.");
 		}
 	}
 
-	// all'avvio carica ordini attivi (tab attivi di default)
 	document.addEventListener('DOMContentLoaded', () => {
 		caricaOrdini('attivi');
 	});
 
-	// cambio tab su storico
 	document.getElementById('tab-storico').addEventListener('click', () => {
 		caricaOrdini('storico');
 	});
 
-	// cambio tab su attivi
 	document.getElementById('tab-attivi').addEventListener('click', () => {
 		caricaOrdini('attivi');
 	});
-
-	// aggiornamento
-	document.querySelector('button[onclick="caricaOrdini()"]').onclick = (e) => {
-		e.preventDefault();
-		const tabAttiva = document.querySelector('.nav-link.active').id;
-		if (tabAttiva === 'tab-attivi') {
-			caricaOrdini('attivi');
-		} else {
-			caricaOrdini('storico');
-		}
-	};
 </script>
 </body>
 </html>
