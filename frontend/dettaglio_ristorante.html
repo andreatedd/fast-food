@@ -103,6 +103,11 @@
 		Nessun piatto trovato con questi criteri di ricerca.
 	</div>
 
+	<div id="errore" class="alert alert-danger d-none text-center shadow-sm rounded-4 border-0" role="alert">
+		<i class="bi bi-exclamation-triangle-fill fs-4 d-block mb-2"></i>
+		<strong>Ops! Si è verificato un problema:</strong><br>
+		<span id="testo-errore"></span></div>
+
 	<div class="row g-4" id="griglia-menu"></div>
 </div>
 
@@ -121,17 +126,32 @@
 		<button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
 	</div>
 	<div class="offcanvas-body d-flex flex-column bg-light">
-		<div id="cartAlert" class="alert d-none text-center small" role="alert"></div>
+		<div id="cartAlert" class="alert alert-danger d-none text-center small" role="alert"></div>
 
-		<div id="cartItemsContainer" class="flex-grow-1 overflow-auto pe-2">
+		<div id="carrello-vuoto" class="text-center text-muted mt-5 d-none">
+			<i class="bi bi-cart-x fs-1 opacity-50"></i>
+			<p class="mt-2">Il tuo carrello è vuoto</p>
 		</div>
+
+		<div id="cartItemsContainer" class="flex-grow-1 overflow-auto pe-2"></div>
+
+		<template id="modello-riga-carrello">
+			<div class="d-flex justify-content-between align-items-center bg-white p-3 mb-2 rounded-3 shadow-sm border">
+				<div>
+					<h6 class="mb-0 fw-bold nome-item"></h6>
+					<small class="text-muted info-item"></small>
+				</div>
+				<button class="btn btn-sm btn-outline-danger border-0 btn-elimina">
+					<i class="bi bi-trash"></i>
+				</button>
+			</div>
+		</template>
 
 		<div class="border-top border-2 border-danger-subtle pt-3 mt-3 bg-white p-3 rounded-4 shadow-sm">
 
 			<div class="mb-3 pb-3 border-bottom">
 				<label class="form-label small fw-bold text-muted mb-1" for="metodoPagamentoCheckout"><i
-						class="bi bi-wallet2 me-1"></i> Metodo di
-					Pagamento</label>
+						class="bi bi-wallet2 me-1"></i> Metodo di Pagamento</label>
 				<select class="form-select form-select-sm bg-light border-0" id="metodoPagamentoCheckout">
 					<option value="carta_di_credito">Carta di Credito</option>
 					<option value="carta_prepagata">Carta Prepagata</option>
@@ -142,8 +162,14 @@
 				<span>Totale da pagare:</span>
 				<span class="text-success">€ <span id="offcanvasTotal">0.00</span></span>
 			</div>
-			<button class="btn btn-danger w-100 py-3 fw-bold shadow-sm rounded-3" id="btnConfermaOrdine">
-				<i class="bi bi-credit-card-fill me-2"></i> Conferma e Paga
+			<button id="btnConfermaOrdine" class="btn btn-danger w-100 py-2 fw-bold">
+			    <span id="btnConfermaTestoNormale">
+			        <i class="bi bi-credit-card-fill me-2"></i> Conferma e Paga
+			    </span>
+
+				<span id="btnConfermaTestoLoading" class="d-none">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Elaborazione...
+                </span>
 			</button>
 		</div>
 	</div>
@@ -253,13 +279,23 @@
 		window.location.replace('auth.html');
 	}
 
+	function mostraErrore(messaggio) {
+		const griglia = document.getElementById('griglia-menu');
+		const alertErrore = document.getElementById('errore');
+		const testoErrore = document.getElementById('testo-errore');
+
+		griglia.classList.add('d-none');
+		testoErrore.textContent = messaggio;
+		alertErrore.classList.remove('d-none');
+	}
+
 	async function caricaDettaglioRistorante() {
 		const urlParams = new URLSearchParams(window.location.search);
 		idRistoranteCorrente = urlParams.get('id');
 
 		if (!idRistoranteCorrente) {
 			alert("ID Ristorante mancante nell'URL!");
-			window.location.href = 'homepage.html';
+			window.location.replace('homepage.html');
 			return;
 		}
 
@@ -268,7 +304,7 @@
 
 			if (!response.ok) {
 				alert("Ristorante non trovato.");
-				window.location.href = 'homepage.html';
+				window.location.replace('homepage.html');
 				return;
 			}
 
@@ -281,6 +317,8 @@
 			await caricaPiatti();
 		} catch (error) {
 			console.error("Errore:", error);
+			document.getElementById('titoloRistorante').textContent = "Errore di connessione";
+			mostraErrore("Impossibile connettersi al server.");
 		}
 	}
 
@@ -294,34 +332,27 @@
 		try {
 			const response = await fetch(url);
 			if (!response.ok) {
-				const errorData = await response.json();
+				const errorData = await response.json().catch(() => ({}));
 				mostraErrore(errorData.message || "Impossibile caricare i piatti.");
 				return;
 			}
 			const piatti = await response.json();
 			mostraMenu(piatti);
 		} catch (error) {
-			mostraErrore(error);
+			console.error("Errore:", error);
+			mostraErrore("Errore di connessione al server.");
 		}
-	}
-
-	function mostraErrore(messaggio) {
-		document.getElementById('griglia-menu').innerHTML = `
-			<div class="col-12">
-				<div class="alert alert-danger text-center shadow-sm rounded-4 border-0" role="alert">
-					<i class="bi bi-exclamation-triangle-fill fs-4 d-block mb-2"></i>
-					<strong>Ops! Si è verificato un problema:</strong><br>
-					${messaggio}<br>
-				</div>
-			</div>
-		`;
 	}
 
 	function mostraMenu(piattiDaMostrare) {
 		const griglia = document.getElementById('griglia-menu');
 		const template = document.getElementById('modello-card-piatto');
 		const alertNessunPiatto = document.getElementById('nessun-piatto');
+		const alertErrore = document.getElementById('errore');
+
 		griglia.innerHTML = '';
+		alertErrore.classList.add('d-none');
+		griglia.classList.remove('d-none');
 
 		if (piattiDaMostrare.length === 0) {
 			alertNessunPiatto.classList.remove('d-none');
@@ -339,6 +370,7 @@
 			clone.querySelector('.prezzo-piatto').textContent = `€ ${piatto.prezzo.toFixed(2)}`;
 			clone.querySelector('.ingredienti-piatto').textContent = piatto.ingredients ? piatto.ingredients.join(', ') : "Ingredienti non specificati";
 
+			// ricetta
 			if (piatto.strInstructions && piatto.strInstructions.trim() !== "") {
 				const btnRicetta = clone.querySelector('.btn-ricetta');
 				btnRicetta.classList.remove('d-none');
@@ -350,19 +382,16 @@
 				});
 			}
 
-			// GESTIONE CLICK SU "AGGIUNGI"
+			// aggiunta al carrello
 			clone.querySelector('.btn-carrello').addEventListener('click', () => {
-				// 1. Controllo sicurezza (Deve essere loggato come cliente!)
 				const token = localStorage.getItem('token');
 				const ruolo = localStorage.getItem('ruolo');
 
 				if (!token || ruolo !== 'cliente') {
 					alert("Devi accedere al tuo account Cliente per poter ordinare!");
-					window.location.href = 'auth.html';
+					window.location.replace('auth.html');
 					return;
 				}
-
-				// 2. Aggiunge al carrello
 				aggiungiAlCarrello(piatto.strMeal, piatto.prezzo);
 			});
 
@@ -370,12 +399,7 @@
 		});
 	}
 
-	// ==========================================
-	// LOGICA DEL CARRELLO
-	// ==========================================
-
 	function aggiungiAlCarrello(nomePiatto, prezzo) {
-		// Cerca se il piatto è già nel carrello
 		const elementoEsistente = carrello.find(item => item.nome === nomePiatto);
 
 		if (elementoEsistente) {
@@ -388,65 +412,71 @@
 	}
 
 	function rimuoviDalCarrello(nomePiatto) {
-		// Filtriamo il carrello tenendo tutti i piatti TRANNE quello da rimuovere
 		carrello = carrello.filter(item => item.nome !== nomePiatto);
 		aggiornaUIcarrello();
 	}
 
 	function aggiornaUIcarrello() {
-		const containerBtn = document.getElementById('floatingCartBtnContainer');
+		const carrelloBtn = document.getElementById('floatingCartBtnContainer');
 		const cartItemsContainer = document.getElementById('cartItemsContainer');
+		const carrelloVuoto = document.getElementById('carrello-vuoto');
+		const rigaCarrello = document.getElementById('modello-riga-carrello');
+
+		// nasconde alert del carrello
+		const alertBox = document.getElementById('cartAlert');
+		alertBox.classList.add('d-none');
 
 		let totale = 0;
 		let numeroPezzi = 0;
 		cartItemsContainer.innerHTML = '';
 
 		if (carrello.length === 0) {
-			// Se il carrello è vuoto, nascondiamo il bottone fluttuante
-			containerBtn.classList.add('d-none');
-			cartItemsContainer.innerHTML = '<div class="text-center text-muted mt-5"><i class="bi bi-cart-x fs-1 opacity-50"></i><p class="mt-2">Il tuo carrello è vuoto</p></div>';
+			carrelloBtn.classList.add('d-none');
+			carrelloVuoto.classList.remove('d-none');
 		} else {
-			// Mostriamo il bottone fluttuante
-			containerBtn.classList.remove('d-none');
+			carrelloBtn.classList.remove('d-none');
+			carrelloVuoto.classList.add('d-none');
 
 			carrello.forEach(item => {
 				totale += (item.prezzo * item.quantita);
 				numeroPezzi += item.quantita;
 
-				// Creiamo la riga visiva del piatto nel carrello
-				const div = document.createElement('div');
-				div.className = "d-flex justify-content-between align-items-center bg-white p-3 mb-2 rounded-3 shadow-sm border";
-				div.innerHTML = `
-                    <div>
-                        <h6 class="mb-0 fw-bold">${item.nome}</h6>
-                        <small class="text-muted">${item.quantita} x € ${item.prezzo.toFixed(2)}</small>
-                    </div>
-                    <button class="btn btn-sm btn-outline-danger border-0" onclick="rimuoviDalCarrello('${item.nome}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                `;
-				cartItemsContainer.appendChild(div);
+				const clone = rigaCarrello.content.cloneNode(true);
+
+				clone.querySelector('.nome-item').textContent = item.nome;
+				clone.querySelector('.info-item').textContent = `${item.quantita} x € ${item.prezzo.toFixed(2)}`;
+
+				clone.querySelector('.btn-elimina').addEventListener('click', () => {
+					rimuoviDalCarrello(item.nome);
+				});
+				cartItemsContainer.appendChild(clone);
 			});
 		}
 
-		// Aggiorniamo i testi dei totali nel bottone fluttuante e nella barra laterale
 		document.getElementById('cartCount').textContent = numeroPezzi;
 		document.getElementById('cartTotal').textContent = totale.toFixed(2);
 		document.getElementById('offcanvasTotal').textContent = totale.toFixed(2);
 	}
 
-	// ==========================================
-	// INVIO DELL'ORDINE AL SERVER
-	// ==========================================
-
+	// Invio ordine al db
 	document.getElementById('btnConfermaOrdine').addEventListener('click', async () => {
 		const token = localStorage.getItem('token');
 		const alertBox = document.getElementById('cartAlert');
-
-		// Disabilitiamo il bottone durante il caricamento per evitare doppi click
 		const btn = document.getElementById('btnConfermaOrdine');
+		const testoNormale = document.getElementById('btnConfermaTestoNormale');
+		const testoLoading = document.getElementById('btnConfermaTestoLoading');
+
+		alertBox.classList.add('d-none');
+		// Disabilita il bottone e mostra caricamento
 		btn.disabled = true;
-		btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Elaborazione...';
+		testoNormale.classList.add('d-none');
+		testoLoading.classList.remove('d-none');
+
+		const ripristinaBottone = () => {
+			btn.disabled = false;
+			testoLoading.classList.add('d-none');
+			testoNormale.classList.remove('d-none');
+		};
 
 		try {
 			const response = await fetch('http://localhost:3000/api/ordini', {
@@ -461,38 +491,38 @@
 				})
 			});
 
-			const risultato = await response.json();
-
 			if (!response.ok) {
-				alertBox.className = "alert alert-danger text-center small";
-				alertBox.textContent = risultato.message || "Errore durante l'ordine.";
+				if (response.status === 401) {
+					alert("Sessione scaduta. Effettua nuovamente l'accesso.");
+					esci();
+					return;
+				}
+				const errorData = await response.json().catch(() => ({}));
+				alertBox.textContent = errorData.message || "Errore durante la conferma dell'ordine.";
 				alertBox.classList.remove('d-none');
-				btn.disabled = false;
-				btn.innerHTML = '<i class="bi bi-credit-card-fill me-2"></i> Conferma e Paga';
+
+				ripristinaBottone();
 				return;
 			}
 
-			// SE L'ORDINE VA A BUON FINE!
-			// 1. Svuotiamo il carrello
+			const risultato = await response.json();
+
 			carrello = [];
 			aggiornaUIcarrello();
 
-			// 2. Chiudiamo l'Offcanvas
 			bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasCarrello')).hide();
 
-			// 3. Mostriamo il messaggio di trionfo usando la modale del browser (che calcola anche i minuti dal backend!)
 			alert(`Ordine confermato con successo!\n\nIl ristorante ha ricevuto il tuo ordine.\nTempo di attesa stimato: ${risultato.ordine.tempoAttesaStimato} minuti.`);
-
+			ripristinaBottone();
 		} catch (error) {
-			alertBox.className = "alert alert-danger text-center small";
+			console.error("Errore:", error);
 			alertBox.textContent = "Errore di connessione al server.";
 			alertBox.classList.remove('d-none');
-			btn.disabled = false;
-			btn.innerHTML = '<i class="bi bi-credit-card-fill me-2"></i> Conferma e Paga';
+
+			ripristinaBottone();
 		}
 	});
 
-	// Ricerca ed Eventi Vari
 	document.getElementById('formRicercaPiatti').addEventListener('submit', async (e) => {
 		e.preventDefault();
 		const tipoRicerca = document.getElementById('tipoRicerca').value;

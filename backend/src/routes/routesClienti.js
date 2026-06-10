@@ -88,7 +88,6 @@ router.get("/:id/piatti", validaIdMongo, async (req, res, next) => {
 			const mappaCampiTestuali = {
 				'nome': 'menu.strMeal',
 				'tipologia': 'menu.strCategory',
-				'ingrediente': 'menu.ingredients',
 			};
 
 			// Filtri
