@@ -165,6 +165,13 @@
 	async function caricaCategorie() {
 		try {
 			const response = await fetch('http://localhost:3000/api/catalogo/categorie');
+
+			if (!response.ok) {
+				document.getElementById('contenitoreCategorie').innerHTML = '<small class="text-danger">Impossibile caricare le categorie.</small>';
+				console.error("Errore:", response.status);
+				return;
+			}
+
 			const categorie = await response.json();
 
 			const contenitore = document.getElementById('contenitoreCategorie');
@@ -175,18 +182,18 @@
 
 			const maxVisibili = 4;  // visualizziamo solo 4 sempre
 
-            // contenitore dove inserire i checkbox (div principale o quello nascosto)
+			// contenitore dove inserire i checkbox (div principale o quello nascosto)
 			let contenitoreTarget = contenitore;
 
 			categorie.forEach((cat, index) => {
-                // Se raggiungiamo il limite, creiamo il contenitore nascosto e spostiamo il target lì
+				// Se raggiungiamo il limite, creiamo il contenitore nascosto e spostiamo il target lì
 				if (index === maxVisibili) {
 					const cloneCollapse = tplCollapse.content.cloneNode(true);
 					contenitore.appendChild(cloneCollapse);
 					contenitoreTarget = document.getElementById('altrePreferenze');
 				}
 
-                // creazione singolo checkbox
+				// creazione singolo checkbox
 				const cloneCheckbox = tplCheckbox.content.cloneNode(true);
 				const input = cloneCheckbox.querySelector('.form-check-input');
 				const label = cloneCheckbox.querySelector('.form-check-label');
