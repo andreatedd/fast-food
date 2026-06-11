@@ -37,7 +37,7 @@ export const soloClienti = (req, res, next) => {
 };
 
 export const validaRegistrazione = (req, res, next) => {
-	const {nome, cognome, email, password} = req.body;
+	const {nome, cognome, email, password, ruolo} = req.body;
 
 	if (!nome || nome.trim().length < 2) {
 		return res.status(400).json({message: "Il nome deve contenere almeno 2 caratteri."});
@@ -45,14 +45,16 @@ export const validaRegistrazione = (req, res, next) => {
 	if (!cognome || cognome.trim().length < 2) {
 		return res.status(400).json({message: "Il cognome deve contenere almeno 2 caratteri."});
 	}
-
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	if (!email || !emailRegex.test(email)) {
 		return res.status(400).json({message: "Inserisci un indirizzo email valido."});
 	}
-
 	if (!password || password.length < 6) {
 		return res.status(400).json({message: "La password deve contenere almeno 6 caratteri."});
+	}
+	const ruoliValidi = ['ristoratore', 'cliente'];
+	if (!ruolo || !ruoliValidi.includes(ruolo)) {
+		return res.status(400).json({message: "Ruolo non valido. Deve essere 'ristoratore' o 'cliente'."});
 	}
 
 	next();
@@ -102,7 +104,7 @@ export const validaIdMongo = (req, res, next) => {
 };
 
 export const validaDatiRistorante = (req, res, next) => {
-	const {nome, partitaIva, email} = req.body;
+	const {nome, partitaIva, email, telefono, indirizzo} = req.body;
 
 	if (!nome || nome.trim() === "") {
 		return res.status(400).json({message: "Il nome del ristorante è obbligatorio."});
@@ -115,6 +117,12 @@ export const validaDatiRistorante = (req, res, next) => {
 		if (!emailRegex.test(email)) {
 			return res.status(400).json({message: "Formato email del ristorante non valido."});
 		}
+	}
+	if (!telefono || telefono.trim() === "") {
+		return res.status(400).json({message: "Il numero di telefono è obbligatorio."});
+	}
+	if (!indirizzo || indirizzo.trim() === "") {
+		return res.status(400).json({message: "L'indirizzo è obbligatorio."});
 	}
 	next();
 };
