@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import schemaUtente from "../models/user.js";
-import { validaRegistrazione, validaLogin } from "../middlewares/validations.js";
+import {validaRegistrazione, validaLogin} from "../middlewares/validations.js";
 
 const router = express.Router();
 
@@ -24,6 +24,9 @@ router.post("/signup", validaRegistrazione, async (req, res, next) => {
 		res.status(201).json({message: "Registrazione completata con successo!"});
 
 	} catch (error) {
+		if (error.code === 11000) {
+			res.status(409).json({message: "Email già in uso"});
+		}
 		next(error);
 	}
 });
