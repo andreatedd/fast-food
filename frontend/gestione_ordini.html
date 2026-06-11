@@ -78,6 +78,11 @@
 			        data-bs-target="#storico" type="button" role="tab">Storico (Consegnati)
 			</button>
 		</li>
+		<li class="nav-item" role="presentation">
+			<button class="nav-link text-secondary fw-bold" id="tab-statistiche" data-bs-toggle="tab"
+			        data-bs-target="#statistiche" type="button" role="tab"> Statistiche
+			</button>
+		</li>
 	</ul>
 
 	<div class="tab-content" id="ordiniTabContent">
@@ -94,6 +99,29 @@
 		<!--tab storico-->
 		<div class="tab-pane fade" id="storico" role="tabpanel">
 			<div class="row g-4" id="griglia-ordini-storico"></div>
+		</div>
+		<!--tab statistiche-->
+		<div class="tab-pane fade" id="statistiche" role="tabpanel">
+			<div class="row g-4 mt-2">
+				<div class="col-md-6">
+					<div class="card shadow-sm border-0 rounded-4 bg-success text-white h-100">
+						<div class="card-body p-4 text-center">
+							<i class="bi bi-currency-euro display-4 mb-3 opacity-75"></i>
+							<h5 class="fw-bold">Incasso Totale</h5>
+							<h2 id="stat-incasso" class="fw-bold m-0 display-5">€ 0.00</h2>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="card shadow-sm border-0 rounded-4 bg-primary text-white h-100">
+						<div class="card-body p-4 text-center">
+							<i class="bi bi-bag-check-fill display-4 mb-3 opacity-75"></i>
+							<h5 class="fw-bold">Ordini Completati</h5>
+							<h2 id="stat-ordini" class="fw-bold m-0 display-5">0</h2>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
@@ -305,6 +333,41 @@
 			listaPiatti.appendChild(clonePiatto);
 		});
 	}
+
+	async function mostraStatistiche() {
+		mostraErrore(null);
+		try {
+			const response = await fetch('http://localhost:3000/api/ordini/ristorante/statistiche', {
+				headers: {'Authorization': `Bearer ${token}`}
+			});
+
+			if (!response.ok) {
+				if (response.status === 401) {
+					alert("Sessione scaduta.");
+					esci();
+					return;
+				}
+				const errorData = await response.json().catch(() => ({}));
+				mostraErrore(errorData.message || "Impossibile caricare le statistiche.");
+				console.error(errorData);
+				return;
+			}
+
+			const dati = await response.json();
+
+			document.getElementById('stat-incasso').textContent = `€ ${dati.incassoTotale.toFixed(2)}`;
+			document.getElementById('stat-ordini').textContent = dati.ordiniCompletati;
+
+		} catch (error) {
+			console.error("Errore: ", error);
+			mostraErrore("Errore di connessione al server.");
+		}
+	}
+
+	// Event Listener per caricare le statistiche solo quando l'utente clicca il tab
+	document.getElementById('tab-statistiche').addEventListener('click', () => {
+		mostraStatistiche();
+	});
 
 	async function cambiaStatoOrdine(idOrdine, nuovoStato) {
 		mostraErrore(null); // nascondi eventuale errore precedente

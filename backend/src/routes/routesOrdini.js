@@ -2,12 +2,12 @@ import express from "express";
 import schemaOrdine from "../models/ordine.js";
 import schemaRistorante from "../models/ristorante.js";
 import {
-    verificaToken,
-    soloRistoratori,
+	verificaToken,
+	soloRistoratori,
 	soloClienti,
-    validaNuovoOrdine,
-    validaIdMongo,
-    validaStatoOrdine
+	validaNuovoOrdine,
+	validaIdMongo,
+	validaStatoOrdine
 } from "../middlewares/validations.js";
 const router = express.Router();
 
@@ -111,6 +111,33 @@ router.get("/ristorante", soloRistoratori, async (req, res, next) => {
 			.sort({ createdAt: -1 });
 
 		res.json(ordini);
+	} catch (error) {
+		next(error);
+	}
+});
+
+// GET statistiche ordini
+router.get("/ristorante/statistiche", soloRistoratori, async (req, res, next) => {
+	try {
+		const mioRistorante = await schemaRistorante.findOne({ proprietario: req.utenteLoggato.idUtente });
+		if (!mioRistorante) {
+			return res.status(404).json({ message: "Devi prima configurare il tuo locale!" });
+		}
+
+		const statistiche = await schemaOrdine.aggregate([
+			{ $match: { ristorante: mioRistorante._id, stato: 'consegnato' } },
+			{
+				$group: {
+					_id: null,
+					incassoTotale: { $sum: "$totale" },
+					ordiniCompletati: { $sum: 1 }	// contatore
+				}
+			}
+		]);
+		const risultato = statistiche.length > 0 ? statistiche[0] : { incassoTotale: 0, ordiniCompletati: 0 };
+		delete risultato._id;
+
+		res.json(risultato);
 	} catch (error) {
 		next(error);
 	}
