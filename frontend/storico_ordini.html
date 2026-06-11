@@ -7,7 +7,7 @@
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
-<body class="bg-light">
+<body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm">
 	<div class="container">
@@ -56,10 +56,15 @@
 		</button>
 	</div>
 
+	<div id="alertBox" class="alert alert-danger text-center d-none shadow-sm rounded-4 border-0" role="alert">
+		<i class="bi bi-exclamation-triangle-fill me-2"></i>
+		<span id="testoAlert"></span>
+	</div>
+
 	<div id="nessun-ordine" class="alert alert-warning text-center d-none rounded-4 border-0 shadow-sm py-5">
 		<i class="bi bi-bag-x fs-1 text-warning d-block mb-3"></i>
 		<h4 class="fw-bold">Nessun ordine trovato</h4>
-		<p class="mb-3">Non hai ancora effettuato ordini. Che ne dici di provare qualcosa di buono?</p>
+		<p class="mb-3">Non hai ancora effettuato ordini.</p>
 		<a href="homepage.html" class="btn btn-danger fw-bold rounded-pill px-4">Sfoglia i Ristoranti</a>
 	</div>
 
@@ -97,7 +102,6 @@
 	const token = localStorage.getItem('token');
 	const ruolo = localStorage.getItem('ruolo');
 
-	// Blocco accesso a chi non è cliente
 	if (!token || ruolo !== 'cliente') {
 		window.location.replace('auth.html');
 	}
@@ -108,12 +112,26 @@
 		window.location.replace('auth.html');
 	}
 
+	function mostraErrore(messaggio) {
+		const alertBox = document.getElementById('alertBox');
+		const testoAlert = document.getElementById('testoAlert');
+
+		if (messaggio) {
+			testoAlert.textContent = messaggio;
+			alertBox.classList.remove('d-none');
+			window.scrollTo({top: 0, behavior: 'smooth'});
+		} else {
+			alertBox.classList.add('d-none');
+		}
+	}
+
 	function formattaData(dataString) {
 		const opzioni = {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'};
 		return new Date(dataString).toLocaleString('it-IT', opzioni);
 	}
 
 	async function caricaStorico() {
+		mostraErrore(null);
 		try {
 			const response = await fetch('http://localhost:3000/api/ordini/cliente', {
 				headers: {'Authorization': `Bearer ${token}`}
@@ -125,6 +143,10 @@
 					esci();
 					return;
 				}
+				const errorData = await response.json().catch(() => ({}));
+				mostraErrore(errorData.message || "Errore nel caricamento degli ordini.");
+				console.error(errorData, response.status);
+				return;
 			}
 
 			const ordini = await response.json();
@@ -132,7 +154,7 @@
 
 		} catch (error) {
 			console.error(error);
-			alert("Errore di connessione al server.");
+			mostraErrore("Impossibile connettersi al server.");
 		}
 	}
 
@@ -153,13 +175,11 @@
 		ordini.forEach(ordine => {
 			const clone = template.content.cloneNode(true);
 
-			// Dati base
 			clone.querySelector('.data-ordine').textContent = formattaData(ordine.createdAt);
 			clone.querySelector('.nome-ristorante').textContent = ordine.ristorante ? ordine.ristorante.nome : 'Ristorante Rimosso';
 			clone.querySelector('.indirizzo-ristorante').textContent = ordine.ristorante ? ordine.ristorante.indirizzo : 'N/A';
 			clone.querySelector('.totale-ordine').textContent = `€ ${ordine.totale.toFixed(2)}`;
 
-			// Badge di stato con colori diversi
 			const badge = clone.querySelector('.stato-badge');
 			if (ordine.stato === 'ordinato') {
 				badge.className = 'badge rounded-pill bg-danger';
@@ -172,7 +192,6 @@
 				badge.textContent = 'CONSEGNATO';
 			}
 
-			// Lista piatti
 			const ulPiatti = clone.querySelector('.lista-piatti');
 			ordine.piatti.forEach(piatto => {
 				const li = document.createElement('li');
