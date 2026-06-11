@@ -10,19 +10,19 @@ const router = express.Router();
 router.get("/", async (req, res, next) => {
 	try {
 		const {nome, luogo, page = "1", limit = "6"} = req.query;
-		let query = {};
+		let filtro = {};
 
-		if (nome) query.nome = {$regex: nome, $options: "i"};
-		if (luogo) query.indirizzo = {$regex: luogo, $options: "i"};
+		if (nome) filtro.nome = {$regex: nome, $options: "i"};
+		if (luogo) filtro.indirizzo = {$regex: luogo, $options: "i"};
 
 		const pageNum = parseInt(page, 10);
 		const limitNum = parseInt(limit, 10);
 		const skip = (pageNum - 1) * limitNum;
 
-		const totalRistoranti = await schemaRistorante.countDocuments(query);
+		const totalRistoranti = await schemaRistorante.countDocuments(filtro);
 		const totalPages = Math.ceil(totalRistoranti / limitNum);
 
-		const ristoranti = await schemaRistorante.find(query)
+		const ristoranti = await schemaRistorante.find(filtro)
 			.select("nome indirizzo menu.strCategory menu.strMealThumb")
 			.skip(skip)
 			.limit(limitNum);
@@ -78,21 +78,20 @@ router.get("/:id/piatti", validaIdMongo, async (req, res, next) => {
 		const {tipo, testo} = req.query;
 
 		let pipeline = [];
-		pipeline.push({$match: {_id: new mongoose.Types.ObjectId(req.params.id)}});
-		pipeline.push({$unwind: "$menu"});
+		pipeline.push({$match: {_id: new mongoose.Types.ObjectId(req.params.id)}});	// ristorante attuale
+		pipeline.push({$unwind: "$menu"});	// separa array di piatti in documenti singoli
 
 		// Filtri
 		if (tipo && testo) {
 			let matchCondizione = {};
 
-			const mappaCampiTestuali = {
+			const campiTestuali = {
 				'nome': 'menu.strMeal',
 				'tipologia': 'menu.strCategory',
+				'ingrediente': 'menu.ingredients'
 			};
-
-			// Filtri
-			if (mappaCampiTestuali[tipo]) {
-				matchCondizione[mappaCampiTestuali[tipo]] = {$regex: testo, $options: "i"};
+			if (campiTestuali[tipo]) {
+				matchCondizione[campiTestuali[tipo]] = {$regex: testo, $options: "i"};
 			} else if (tipo === 'prezzo') {
 				const prezzoMax = parseFloat(testo);
 				if (!isNaN(prezzoMax)) {
@@ -107,7 +106,7 @@ router.get("/:id/piatti", validaIdMongo, async (req, res, next) => {
 
 		pipeline.push({
 			$project: {
-				_id: 0,
+				_id: 0,	// toglie id del ristorante che sarebbe ripetuto per ogni piatto
 				idMeal: "$menu.idMeal",
 				strMeal: "$menu.strMeal",
 				strCategory: "$menu.strCategory",
