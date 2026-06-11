@@ -20,7 +20,6 @@ router.post("/", soloClienti, validaNuovoOrdine, async (req, res, next) => {
 	try {
 		const { ristoranteId, piatti } = req.body;
 
-		// leggiamo prezzi dal db
 		const ristoranteDb = await schemaRistorante.findById(ristoranteId);
 		if (!ristoranteDb) {
 			return res.status(404).json({ message: "Ristorante non trovato" });
@@ -30,6 +29,7 @@ router.post("/", soloClienti, validaNuovoOrdine, async (req, res, next) => {
 		const piattiVerificati = [];
 
 		for (let item of piatti) {
+			// leggiamo prezzi dal db
 			const piatto = ristoranteDb.menu.find(p => p.strMeal === item.nome);
 
 			if (!piatto) {
@@ -38,7 +38,6 @@ router.post("/", soloClienti, validaNuovoOrdine, async (req, res, next) => {
 
 			totale += (piatto.prezzo * item.quantita);
 
-			// Costruiamo l'array con i dati puliti
 			piattiVerificati.push({
 				nome: piatto.strMeal,
 				prezzo: piatto.prezzo,
@@ -78,7 +77,7 @@ router.post("/", soloClienti, validaNuovoOrdine, async (req, res, next) => {
 router.get("/cliente", async (req, res, next) => {
 	try {
 		const ordini = await schemaOrdine.find({ cliente: req.utenteLoggato.idUtente })
-			.populate('ristorante', 'nome indirizzo telefono')
+			.populate('ristorante', 'nome indirizzo telefono')	// join + select
 			.sort({ createdAt: -1 }); // Dal più recente al più vecchio
 
 		res.json(ordini);
@@ -98,16 +97,16 @@ router.get("/ristorante", soloRistoratori, async (req, res, next) => {
 			return res.status(404).json({ message: "Devi prima configurare il tuo locale!" });
 		}
 
-		let queryDb = { ristorante: mioRistorante._id };
+		let filter = { ristorante: mioRistorante._id };
 
 		// filtri se richiesti dal frontend
 		if (req.query.filtro === 'attivi') {
-			queryDb.stato = { $in: ['ordinato', 'in preparazione'] };
+			filter.stato = { $in: ['ordinato', 'in preparazione'] };
 		} else if (req.query.filtro === 'storico') {
-			queryDb.stato = 'consegnato';
+			filter.stato = 'consegnato';
 		}
 
-		const ordini = await schemaOrdine.find(queryDb)
+		const ordini = await schemaOrdine.find(filter)
 			.populate('cliente', 'nome cognome email')
 			.sort({ createdAt: -1 });
 
@@ -122,14 +121,19 @@ router.put("/:id/stato", soloRistoratori, validaIdMongo, validaStatoOrdine, asyn
 	try {
 		const { stato } = req.body;
 
-		const ordineAggiornato = await schemaOrdine.findByIdAndUpdate(
-			req.params.id,
-			{ $set: { stato: stato } },
+		const mioRistorante = await schemaRistorante.findOne({ proprietario: req.utenteLoggato.idUtente });
+		if (!mioRistorante) {
+			return res.status(404).json({ message: "Devi prima configurare il tuo locale!" });
+		}
+
+		const ordineAggiornato = await schemaOrdine.findOneAndUpdate(
+			{ _id: req.params.id, ristorante: mioRistorante._id },
+			{ $set: {stato}},
 			{ returnDocument: 'after', runValidators: true }
 		);
 
 		if (!ordineAggiornato) {
-			return res.status(404).json({ message: "Ordine non trovato." });
+			return res.status(404).json({ message: "Ordine non trovato in questo ristorante." });
 		}
 
 		res.json({ message: `Ordine passato a: ${stato}`, ordine: ordineAggiornato });

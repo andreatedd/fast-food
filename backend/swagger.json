@@ -302,6 +302,12 @@
                   },
                   "email": {
                     "example": "any"
+                  },
+                  "telefono": {
+                    "example": "any"
+                  },
+                  "indirizzo": {
+                    "example": "any"
                   }
                 }
               }
@@ -370,6 +376,9 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "409": {
+            "description": "Conflict"
           }
         },
         "requestBody": {
