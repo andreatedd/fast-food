@@ -144,3 +144,6 @@ node swagger.js
 ## Academic project
 
 This repository contains the implementation for the course final project. No production deployment, payment processing, or hosting service is included.
+
+## License
+This project is licensed under the [MIT License](LICENSE).
